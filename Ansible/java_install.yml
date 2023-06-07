@@ -1,0 +1,5 @@
+---
+# tasks file for install the java
+- name: install java-openjdk11 
+  shell:
+      sudo amazon-linux-extras install java-openjdk11

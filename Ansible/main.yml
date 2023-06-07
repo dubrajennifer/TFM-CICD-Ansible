@@ -1,0 +1,13 @@
+---
+# tasks file for Jenkins_server
+ - include: java_install.yml
+ - include: maven_install.yml
+ - include: docker_install.yml
+ - include: jenkins/jenkins_install.yml
+
+ ---
+# vars file 
+maven_url: "https://dlcdn.apache.org/maven/maven-3/3.8.8/binaries/apache-maven-3.8.8-bin.tar.gz"
+maven_package: apache-maven-3.8.8
+jenkins_Repo: "https://pkg.jenkins.io/redhat-stable/jenkins.repo"
+jenkins_key: "https://pkg.jenkins.io/redhat-stable/jenkins.io-2023.key"
