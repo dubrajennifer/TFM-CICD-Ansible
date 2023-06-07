@@ -3,7 +3,7 @@
  - include: java_install.yml
  - include: maven_install.yml
  - include: docker_install.yml
- - include: jenkins/jenkins_install.yml
+ - include: jenkins_install.yml
 
  ---
 # vars file 

@@ -1,0 +1,8 @@
+---
+- name: Playbook to jenkins setup
+  hosts: localhost
+  become: true
+  gather_facts: yes
+  
+  roles:
+    - jenkins_setup
