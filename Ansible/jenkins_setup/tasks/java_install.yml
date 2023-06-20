@@ -2,4 +2,7 @@
 # tasks file for install the java
 - name: install java-openjdk11 
   shell:
-      sudo amazon-linux-extras install java-openjdk11
+    sudo yum install java-17-amazon-corretto
+    sudo yum install java-17-amazon-corretto-devel
+    sudo yum install java-17-amazon-corretto-jmods
+    export JAVA_HOME=/usr/lib/jvm/java-17-amazon-corretto.x86_64

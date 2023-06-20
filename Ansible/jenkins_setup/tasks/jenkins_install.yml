@@ -22,10 +22,6 @@
       state: started
       enabled: true
       
-- name: Sleep for 30 seconds and continue with play
-  wait_for: timeout=30
- 
-  
 - name: 
   shell:
       sudo usermod -a -G docker jenkins
