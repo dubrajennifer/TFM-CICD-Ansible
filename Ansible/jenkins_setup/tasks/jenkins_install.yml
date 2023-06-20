@@ -48,4 +48,31 @@
     state: present
     line: 'jenkins ALL=(ALL) NOPASSWD: ALL'
     create: yes
+
+- name: Install Jenkins plugins
+  become: true
+  jenkins_plugin:
+    name:
+      - git
+      - pipeline
+      - maven
+    state: present
+
+- name: Create initial user in Jenkins
+  become: true
+  jenkins_script:
+    script: |
+      import jenkins.model.*
+      import hudson.security.*
+
+      def jenkins = Jenkins.getInstance()
+      def hudsonRealm = new HudsonPrivateSecurityRealm(false)
+      hudsonRealm.createAccount("username", "password")
+      jenkins.setSecurityRealm(hudsonRealm)
+
+      def strategy = new FullControlOnceLoggedInAuthorizationStrategy()
+      jenkins.setAuthorizationStrategy(strategy)
+
+      jenkins.save()
+
       
