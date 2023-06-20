@@ -49,14 +49,6 @@
     line: 'jenkins ALL=(ALL) NOPASSWD: ALL'
     create: yes
 
-- name: Install Jenkins plugins
-  become: true
-  jenkins_plugin:
-    name:
-      - git
-      - pipeline
-    state: present
-
 - name: Create initial user in Jenkins
   become: true
   jenkins_script:
