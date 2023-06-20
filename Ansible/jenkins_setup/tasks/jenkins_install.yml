@@ -55,7 +55,6 @@
     name:
       - git
       - pipeline
-      - maven
     state: present
 
 - name: Create initial user in Jenkins
