@@ -49,7 +49,9 @@
     line: 'jenkins ALL=(ALL) NOPASSWD: ALL'
     create: yes
      
-- name: Change permissions to .m2/repository
-  shell: sudo mkdir /var/lib/jenkins/.m2/repository/ 
-         sudo chmod -R 777 /var/lib/jenkins/.m2/repository/
+- name: Create .m2/repository
+  shell: sudo chmod -R 777 /var/lib/jenkins/.m2/repository/
+     
+- name: Change permissions .m2/repository
+  shell: sudo chmod -R 777 /var/lib/jenkins/.m2/repository/
       
