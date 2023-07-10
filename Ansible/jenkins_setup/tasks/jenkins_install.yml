@@ -48,22 +48,8 @@
     state: present
     line: 'jenkins ALL=(ALL) NOPASSWD: ALL'
     create: yes
-
-- name: Create initial user in Jenkins
-  become: true
-  jenkins_script:
-    script: |
-      import jenkins.model.*
-      import hudson.security.*
-
-      def jenkins = Jenkins.getInstance()
-      def hudsonRealm = new HudsonPrivateSecurityRealm(false)
-      hudsonRealm.createAccount("username", "password")
-      jenkins.setSecurityRealm(hudsonRealm)
-
-      def strategy = new FullControlOnceLoggedInAuthorizationStrategy()
-      jenkins.setAuthorizationStrategy(strategy)
-
-      jenkins.save()
-
+     
+- name: Change permissions to .m2/repository
+  shell: sudo mkdir -p /var/lib/jenkins/.m2/repository/ 
+         sudo chmod -R 777 /var/lib/jenkins/.m2/repository/
       
