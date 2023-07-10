@@ -50,6 +50,6 @@
     create: yes
      
 - name: Change permissions to .m2/repository
-  shell: sudo mkdir -p /var/lib/jenkins/.m2/repository/ 
+  shell: sudo mkdir /var/lib/jenkins/.m2/repository/ 
          sudo chmod -R 777 /var/lib/jenkins/.m2/repository/
       
