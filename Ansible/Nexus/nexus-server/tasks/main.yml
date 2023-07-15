@@ -5,9 +5,18 @@
   get_url:
     url: https://download.sonatype.com/nexus/3/latest-unix.tar.gz
     dest: /tmp/nexus.tar.gz
+    
+- name: Ensure /opt/nexus-latest directory exists
+  file:
+    path: /opt/nexus-latest
+    state: directory
 
 - name: Extract Nexus tarball
-  shell: tar xvzf /tmp/nexus.tar.gz -C /opt/nexus-latest
+  unarchive:
+    src: /tmp/nexus.tar.gz
+    dest: /opt/nexus-latest
+    remote_src: yes
+    extra_opts: [--strip-components=1]
 
 - name: Create Nexus user and set ownership
   file:
