@@ -7,9 +7,7 @@
     dest: /tmp/nexus.tar.gz
 
 - name: Extract Nexus tarball
-  shell:
-    tar xvzf -C /tmp/nexus.tar.gz /opt/nexus-latest
-
+  shell: tar xvzf /tmp/nexus.tar.gz -C /opt/nexus-latest
 
 - name: Create Nexus user and set ownership
   file:
