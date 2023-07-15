@@ -6,6 +6,4 @@
   become: true
   gather_facts: yes
   roles:
-  - role: roles/nexus-server
-  roles:
-    - nexus-server
+    - nexus-server  

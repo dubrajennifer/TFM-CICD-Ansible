@@ -1,6 +1,8 @@
 -nexus_url: https://download.sonatype.com/nexus/3/latest-unix.tar.gz
--nexus_user: nexusnexus_group: nexus
--nexus_dir: /opt/nexussonar_type_dir: /opt/sonatype-work
+-nexus_user: nexus
+-nexus_group: nexus
+-nexus_dir: /opt/
+-nexussonar_type_dir: /opt/sonatype-work
 -nexus_rc_file: /opt/nexus/bin/
 -nexus.rcservice_file_location: /etc/systemd/system/
 -nexus_service_loc: /opt/nexus/bin/nexus
