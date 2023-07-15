@@ -13,11 +13,11 @@
     remote_src: yes
 
 - name: Rename Nexus directory
-  command: mv /opt/nexus-* /opt/nexus
+  command: sudo mv /opt/nexus-* /opt/nexus-latest
 
 - name: Create Nexus user and set ownership
   file:
-    path: /opt/nexus
+    path: /opt/nexus-latest
     owner: nexus
     group: nexus
     state: directory
