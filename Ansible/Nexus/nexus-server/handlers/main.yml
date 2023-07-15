@@ -1,4 +1,4 @@
----- name: start nexus service
+- name: Start Nexus service
   service:
     name: nexus
     state: started
