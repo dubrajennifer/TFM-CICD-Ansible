@@ -1,10 +1,5 @@
 ---
-- name: Install required packages
-  yum:
-    name:
-      - java-11-openjdk-headless
-      - curl
-    state: present
+- include: java_install.yml
 
 - name: Download Nexus tarball
   get_url:
