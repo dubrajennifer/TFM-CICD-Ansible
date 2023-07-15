@@ -7,13 +7,9 @@
     dest: /tmp/nexus.tar.gz
 
 - name: Extract Nexus tarball
-  unarchive:
-    src: /tmp/nexus.tar.gz
-    dest: /opt/
-    remote_src: yes
+  shell:
+    tar xvzf -C /tmp/nexus.tar.gz /opt/nexus-latest
 
-- name: Rename Nexus directory
-  command: sudo mv /opt/nexus-* /opt/nexus-latest
 
 - name: Create Nexus user and set ownership
   file:
