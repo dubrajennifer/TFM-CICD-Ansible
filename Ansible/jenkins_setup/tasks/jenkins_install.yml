@@ -56,5 +56,5 @@
   shell: sudo chmod -R 777 /var/lib/jenkins/.m2/repository/
      
 - name: Create directory known_hosts
-  shell: sudo mkdir -p  ~/.ssh/known_hosts
+  shell: sudo mkdir -p  /var/lib/jenkins/.ssh/known_hosts
       
