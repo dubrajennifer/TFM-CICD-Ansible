@@ -1,0 +1,8 @@
+---
+- name: Playbook to nexus setup
+  hosts: localhost
+  become: true
+  gather_facts: yes
+  
+  roles:
+    - mrlesmithjr.ansible_nexus_repo_oss
