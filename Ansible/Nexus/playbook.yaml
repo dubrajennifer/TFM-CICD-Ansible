@@ -1,8 +1,15 @@
 ---
 - name: Playbook to nexus setup
   hosts: localhost
+  become_method: sudo
+  remote_user: ubuntu
   become: true
   gather_facts: yes
-  
+  vars_files:
+  - roles/nexus-server/vars/main.yml
+  handlers:
+  - include: roles/nexus-server/handlers/main.yml
   roles:
-    - mrlesmithjr.ansible_nexus_repo_oss
+  - role: roles/nexus-server
+  roles:
+    - nexus-server
