@@ -7,6 +7,8 @@ Type=forking
 LimitNOFILE=65536
 User=nexus
 Group=nexus
+Environment="JAVA_HOME=/usr/lib/jvm/java-11-amazon-corretto.x86_64"  
+Environment="JAVA_OPTS=-Xms512m -Xmx512g -XX:MaxDirectMemorySize=512m"
 ExecStart=/opt/nexus-latest/bin/nexus start
 ExecStop=/opt/nexus-latest/bin/nexus stop
 User=nexus

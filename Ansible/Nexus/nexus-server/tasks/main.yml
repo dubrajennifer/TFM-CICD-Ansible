@@ -5,7 +5,7 @@
   get_url:
     url: https://download.sonatype.com/nexus/3/latest-unix.tar.gz
     dest: /tmp/nexus.tar.gz
-    
+
 - name: Ensure /opt/nexus-latest directory exists
   file:
     path: /opt/nexus-latest
@@ -33,8 +33,7 @@
     daemon_reload: yes
 
 - name: Wait for Nexus to start
-  uri:
-    url: http://localhost:8081/
-    status_code: 200
-    register: nexus_status
-    until: nexus_status.status == 200
+  wait_for:
+    host: localhost
+    port: 8081
+    timeout: 300  # Adjust the timeout value as needed
