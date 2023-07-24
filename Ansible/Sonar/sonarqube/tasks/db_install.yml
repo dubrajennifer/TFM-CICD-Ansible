@@ -10,16 +10,16 @@
     state: started
     enabled: yes
 
-- name: Copy SQL script to remote host
-  copy:
-    src: sonarqube_setup.sql
-    dest: /tmp/sonarqube_setup.sql  # Destination path on the remote host
-    mode: '0644'
+# - name: Copy SQL script to remote host
+#   copy:
+#     src: sonarqube_setup.sql
+#     dest: /tmp/sonarqube_setup.sql  # Destination path on the remote host
+#     mode: '0644'
 
-- name: Execute SQL script in MariaDB
-  mysql_db:
-    name: sonarqube_db
-    state: import
-    login_user: root
-    login_password: ""
-    target: /tmp/sonarqube_setup.sql  
+# - name: Execute SQL script in MariaDB
+#   mysql_db:
+#     name: sonarqube_db
+#     state: import
+#     login_user: root
+#     login_password: ""
+#     target: /tmp/sonarqube_setup.sql  
