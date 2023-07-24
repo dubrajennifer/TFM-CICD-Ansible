@@ -1,0 +1,5 @@
+---
+# tasks file for install the java
+- name: install java-openjdk8
+  shell:
+    sudo yum install java-1.8.0-openjdk.x86_64 -y
