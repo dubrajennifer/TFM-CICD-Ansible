@@ -1,4 +1,3 @@
----
 - name: Install Python3 and pip
   shell: "sudo yum install python3 && sudo yum install python3-pip -y && sudo yum install gcc -y && sudo yum install python3-devel -y"
 
@@ -9,9 +8,9 @@
     executable: pip3
 
 - name: Install PostgreSQL using yum
-  shell: "sudo yum install postgresql-server -y"
-  args:
-    warn: false  
+  yum:
+    name: postgresql-server
+    state: latest
 
 - name: Create PostgreSQL data directory
   file:
@@ -22,7 +21,7 @@
     mode: '0700'
 
 - name: Change permissions data directory
-  shell: sudo chmod -R 777 /var/lib/pgsql/data
+  shell: sudo chmod -R 700 /var/lib/pgsql/data
 
 - name: Initialize PostgreSQL database
   command: postgresql-setup initdb
@@ -30,7 +29,7 @@
 
 - name: Update PostgreSQL authentication method in pg_hba.conf
   blockinfile:
-    path: /path/to/postgresql/pg_hba.conf  # Replace with the correct path to your pg_hba.conf file
+    path: /var/lib/pgsql/data/pg_hba.conf
     block: |
       # Allow password-based authentication for all connections
       local   all             all                                     md5
