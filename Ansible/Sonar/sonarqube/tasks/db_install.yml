@@ -1,8 +1,22 @@
 ---
-- name: Install PostgreSQL
+- name: Install PostgreSQL using yum
   shell: "sudo yum install postgresql-server -y"
+  args:
+    warn: false  
 
-- name: Start and enable PostgreSQL service
+- name: Create PostgreSQL data directory
+  file:
+    path: /var/lib/pgsql/data
+    state: directory
+    owner: postgres
+    group: postgres
+    mode: '0700'
+
+- name: Initialize PostgreSQL database
+  command: postgresql-setup initdb
+  become_user: postgres
+
+- name: Start PostgreSQL service
   service:
     name: postgresql
     state: started
