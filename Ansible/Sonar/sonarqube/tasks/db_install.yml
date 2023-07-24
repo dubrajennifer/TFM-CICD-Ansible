@@ -1,8 +1,6 @@
 ---
 - name: Install PostgreSQL
-  package:
-    name: postgresql
-    state: present
+  shell: "sudo yum install postgresql-server -y"
 
 - name: Start and enable PostgreSQL service
   service:
@@ -17,6 +15,9 @@
     password: "{{ sonarqube_db_password }}"
     login_user: postgres
     login_host: localhost
+
+- name: Create SonarQube database
+  become_user: postgres
   postgresql_db:
     name: "{{ sonarqube_db_name }}"
     owner: "{{ sonarqube_db_user }}"
