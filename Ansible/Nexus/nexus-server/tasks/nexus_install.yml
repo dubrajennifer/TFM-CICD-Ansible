@@ -99,5 +99,9 @@
     daemon_reload: yes
 
 - name: Print Nexus admin password
+  shell: cat /nexus/nexus-data/admin.password
+  register: admin_password_output
+
+- name: Display Nexus admin password
   debug:
-    var: admin_password
+    msg: "Nexus Admin Password: {{ admin_password_output.stdout }}"
