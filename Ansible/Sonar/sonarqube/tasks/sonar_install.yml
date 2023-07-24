@@ -22,7 +22,7 @@
 
 - name: Copy SonarQube distribution zip
   copy:
-    src: "{{ sonarqube_download_dest }}-*.zip"
+    src: "{{ sonarqube_download_dest }}"
     dest: "{{ sonarqube_install_dir }}/sonarqube-{{ sonarqube_version }}.zip"
     remote_src: yes
     owner: "{{ sonarqube_user }}"
@@ -54,3 +54,9 @@
     owner: "{{ sonarqube_user }}"
     group: "{{ sonarqube_group }}"
     mode: "0644"
+
+- name: Start SonarQube service
+  systemd:
+    name: "{{ sonarqube_service_name }}"
+    state: started
+    enabled: yes
