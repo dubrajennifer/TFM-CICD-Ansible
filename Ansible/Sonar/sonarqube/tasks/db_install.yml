@@ -29,12 +29,12 @@
   become_user: postgres
 
 - name: Update PostgreSQL authentication method in pg_hba.conf
-  become: yes
-  lineinfile:
-    path: /var/lib/pgsql/data/pg_hba.conf # Replace with the correct path to your pg_hba.conf file
-    regexp: '^local\s+all\s+all\s+(peer|ident)\s*$'
-    line: 'local   all             all                                     md5'
-    backup: yes
+  blockinfile:
+    path: /path/to/postgresql/pg_hba.conf  # Replace with the correct path to your pg_hba.conf file
+    block: |
+      # Allow password-based authentication for all connections
+      local   all             all                                     md5
+    marker: "# {mark} ANSIBLE MANAGED BLOCK"
 
 - name: Start PostgreSQL service
   service:
