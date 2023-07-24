@@ -16,7 +16,7 @@
     group: "{{ nexus_user }}"
     state: directory
 
- - name: Set ownership for Nexus data directory
+- name: Set ownership for Nexus data directory
   file:
     path: "/nexus/nexus-data"
     owner: "{{ nexus_user }}"
