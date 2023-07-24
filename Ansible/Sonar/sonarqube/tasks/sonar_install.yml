@@ -1,62 +1,20 @@
 # tasks/main.yml
 ---
-- name: Create SonarQube user
-  user:
-    name: "{{ sonarqube_user }}"
-    state: present
-    system: yes
-    shell: "/sbin/nologin"   
+- name: Add SonarQube Repository
+  yum_repository:
+    name: sonarqube
+    baseurl: https://binaries.sonarsource.com/Distribution/sonarqube/sonarqube-8.9.1.44547.zip
+    description: SonarQube Repository
+    enabled: yes
+    gpgcheck: no
 
-
-- name: Download SonarQube
-  get_url:
-    url: "{{ sonarqube_download_url }}"
-    dest: "{{ sonarqube_download_dest }}"
-
-- name: Create SonarQube installation directory
-  file:
-    path: "{{ sonarqube_install_dir }}"
-    state: directory
-    owner: "{{ sonarqube_user }}"
-    group: "{{ sonarqube_group }}"
-
-- name: Copy SonarQube distribution zip
-  copy:
-    src: "{{ sonarqube_download_dest }}"
-    dest: "{{ sonarqube_install_dir }}/sonarqube-{{ sonarqube_version }}.zip"
-    remote_src: yes
-    owner: "{{ sonarqube_user }}"
-    group: "{{ sonarqube_group }}"
-    mode: "0644"
-
-- name: Extract SonarQube
-  unarchive:
-    src: "{{ sonarqube_install_dir }}/sonarqube-{{ sonarqube_version }}.zip"
-    dest: "{{ sonarqube_install_dir }}"
-    remote_src: yes
-    owner: "{{ sonarqube_user }}"
-    group: "{{ sonarqube_group }}"
-    mode: "0755"
-    creates: "{{ sonarqube_install_dir }}/sonarqube-{{ sonarqube_version }}"
-
-- name: Create symbolic link to SonarQube installation
-  file:
-    src: "{{ sonarqube_install_dir }}/sonarqube-{{ sonarqube_version }}"
-    dest: "{{ sonarqube_install_dir }}/sonarqube"
-    state: link
-    owner: "{{ sonarqube_user }}"
-    group: "{{ sonarqube_group }}"
-
-- name: Copy SonarQube properties file
-  template:
-    src: "templates/sonar.properties.j2"
-    dest: "{{ sonarqube_install_dir }}/sonarqube/conf/sonar.properties"
-    owner: "{{ sonarqube_user }}"
-    group: "{{ sonarqube_group }}"
-    mode: "0644"
+- name: Install SonarQube
+  yum:
+    name: sonarqube
+    state: latest
 
 - name: Start SonarQube service
-  systemd:
-    name: "{{ sonarqube_service_name }}"
+  service:
+    name: sonarqube
     state: started
     enabled: yes

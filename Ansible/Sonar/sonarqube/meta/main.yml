@@ -1,0 +1,12 @@
+---
+galaxy_info:
+  author: Your Name
+  description: Role to install SonarQube with yum package manager
+  license: MIT
+  min_ansible_version: 2.9
+  platforms:
+    - name: EL
+      versions:
+        - 8
+  galaxy_tags:
+    - sonarqube
