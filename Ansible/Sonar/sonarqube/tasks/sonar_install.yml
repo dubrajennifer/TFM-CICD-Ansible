@@ -1,5 +1,13 @@
 # tasks/main.yml
 ---
+- name: Create sonarqube user
+  user:
+    name: sonarqube
+    system: yes
+    shell: /bin/bash
+    home: /opt/sonarqube-9.4.0.54424
+    createhome: yes
+    
 - name: Download SonarQube archive
   get_url:
     url: "https://binaries.sonarsource.com/Distribution/sonarqube/sonarqube-9.4.0.54424.zip"
