@@ -1,8 +1,5 @@
-nexus_install_dir: /app/nexus
+nexus_install_dir: /app
 nexus_tar_url: https://download.sonatype.com/nexus/3/latest-unix.tar.gz
-nexus_vmoptions:
-  - { key: "-Xms", value: "1024m" }
-  - { key: "-Xmx", value: "1024m" }
 nexus_user: "nexus"
 nexus_user_home: "/home/{{ nexus_user }}"
 nexus_user_shell: "/bin/bash"

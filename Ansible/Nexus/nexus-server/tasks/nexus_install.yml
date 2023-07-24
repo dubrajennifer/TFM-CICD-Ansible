@@ -1,13 +1,13 @@
 ---
 #task to install Nexus
 - name: Create Nexus user
-    user:
-      name: "{{ nexus_user }}"
-      comment: "Nexus User"
-      shell: "{{ nexus_user_shell }}"
-      home: "{{ nexus_user_home }}"
-      createhome: yes
-      state: present
+  user:
+    name: "{{ nexus_user }}"
+    comment: "Nexus User"
+    shell: "{{ nexus_user_shell }}"
+    home: "{{ nexus_user_home }}"
+    createhome: yes
+    state: present
 
 - name: Create Nexus installation directory
   file:
@@ -21,31 +21,59 @@
     url: "{{ nexus_tar_url }}"
     dest: "{{ nexus_install_dir }}/nexus.tar.gz"
 
+
 - name: Extract Nexus
   unarchive:
     src: "{{ nexus_install_dir }}/nexus.tar.gz"
     dest: "{{ nexus_install_dir }}"
-    remote_src: yes
-    creates: "{{ nexus_install_dir }}/nexus-3.*"
+    remote_src: no
+    creates: "{{ nexus_install_dir }}/nexus-*"  # Use wildcard to handle version changes
+
+- name: Find the extracted Nexus folder
+  find:
+    paths: "{{ nexus_install_dir }}"
+    patterns: "nexus-*"
+    file_type: directory
+  register: extracted_nexus
 
 - name: Move Nexus directory
   file:
-    src: "{{ nexus_install_dir }}/nexus-3*"
+    src: "{{ extracted_nexus.files[0].path }}"
     dest: "{{ nexus_install_dir }}/nexus"
     state: link
 
 - name: Set Nexus run_as_user
   lineinfile:
-    path: "{{ nexus_install_dir }}/bin/nexus.rc"
+    path: "{{ nexus_install_dir }}/nexus/bin/nexus.rc"
     regexp: '^\\s*run_as_user=.*$'
     line: 'run_as_user="nexus"'
 
-- name: Set Nexus JVM options
+
+- name: Add Nexus JVM options to nexus.vmoptions
   lineinfile:
-    path: "{{ nexus_install_dir }}/bin/nexus.vmoptions"
-    regexp: '^\\s*{{ item.key }}=.*$'
-    line: '{{ item.key }}={{ item.value }}'
-  with_items: "{{ nexus_vmoptions }}"
+    path: "{{ nexus_install_dir }}/nexus/bin/nexus.vmoptions"
+    line: "{{ item }}"
+  with_items:
+    - "-Xms1024m"
+    - "-Xmx1024m"
+    - "-XX:MaxDirectMemorySize=1024m"
+    - "-XX:+UnlockDiagnosticVMOptions"
+    - "-XX:+UnsyncloadClass"
+    - "-XX:+LogVMOutput"
+    - "-XX:LogFile=../sonatype-work/nexus3/log/jvm.log"
+    - "-XX:-OmitStackTraceInFastThrow"
+    - "-Djava.net.preferIPv4Stack=true"
+    - "-Dkaraf.home=."
+    - "-Dkaraf.base=."
+    - "-Dkaraf.etc=etc/karaf"
+    - "-Djava.util.logging.config.file=etc/karaf/java.util.logging.properties"
+    - "-Dkaraf.data=/nexus/nexus-data"
+    - "-Djava.io.tmpdir=../sonatype-work/nexus3/tmp"
+    - "-Dkaraf.startLocalConsole=false"
+
+- name: Change ownership of sonatype-work directory
+  command: sudo chown -R nexus:nexus /app/sonatype-work
+  become: true   
 
 - name: Copy Nexus service file
   template:
