@@ -97,3 +97,7 @@
     state: started
     enabled: yes
     daemon_reload: yes
+
+- name: Print Nexus admin password
+  debug:
+    var: admin_password
