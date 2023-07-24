@@ -1,26 +1,21 @@
 ---
 - include: java_install.yml
 
-- name: Download Nexus tarball
-  get_url:
-    url: https://download.sonatype.com/nexus/3/latest-unix.tar.gz
-    dest: /tmp/nexus.tar.gz
+- name: Nexus directory
+  shell: sudo mkdir /app
 
-- name: Ensure /opt/nexus-latest directory exists
-  file:
-    path: /opt/nexus-latest
-    state: directory
+- name: Download nexus tar
+  shell: sudo wget -O /app/nexus.tar.gz https://download.sonatype.com/nexus/3/latest-unix.tar.gz
 
-- name: Extract Nexus tarball
-  unarchive:
-    src: /tmp/nexus.tar.gz
-    dest: /opt/nexus-latest
-    remote_src: yes
-    extra_opts: [--strip-components=1]
+- name: Extract Nexus
+  shell: sudo tar -xvf /app/nexus.tar.gz
+
+- name: Move Nexus 
+  shell: sudo mv nexus-3* nexus
 
 - name: Create Nexus user and set ownership
   file:
-    path: /opt/nexus-latest
+    path: /app/nexus
     owner: nexus
     group: nexus
     state: directory
@@ -31,9 +26,3 @@
     state: started
     enabled: yes
     daemon_reload: yes
-
-- name: Wait for Nexus to start
-  wait_for:
-    host: localhost
-    port: 8081
-    timeout: 300  # Adjust the timeout value as needed
