@@ -7,6 +7,12 @@
     system: yes
     shell: "/sbin/nologin"   
 
+
+- name: Download SonarQube
+  get_url:
+    url: "{{ sonarqube_download_url }}"
+    dest: "{{ sonarqube_download_dest }}"
+
 - name: Create SonarQube installation directory
   file:
     path: "{{ sonarqube_install_dir }}"
@@ -16,7 +22,7 @@
 
 - name: Copy SonarQube distribution zip
   copy:
-    src: "files/sonarqube-{{ sonarqube_version }}.zip"
+    src: "{{ sonarqube_download_dest }}-*.zip"
     dest: "{{ sonarqube_install_dir }}/sonarqube-{{ sonarqube_version }}.zip"
     remote_src: yes
     owner: "{{ sonarqube_user }}"
