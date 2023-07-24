@@ -1,0 +1,3 @@
+---
+- include: java_install.yml
+- include: nexus_install.yml
