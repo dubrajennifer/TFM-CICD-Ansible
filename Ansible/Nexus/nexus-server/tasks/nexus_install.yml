@@ -12,8 +12,15 @@
 - name: Create Nexus installation directory
   file:
     path: "{{ nexus_install_dir }}"
-    owner: nexus
-    group: nexus
+    owner: "{{ nexus_user }}"
+    group: "{{ nexus_user }}"
+    state: directory
+
+ - name: Set ownership for Nexus data directory
+  file:
+    path: "/nexus/nexus-data"
+    owner: "{{ nexus_user }}"
+    group: "{{ nexus_user }}"
     state: directory
 
 - name: Download Nexus tar.gz
