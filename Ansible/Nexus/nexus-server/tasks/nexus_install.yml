@@ -71,6 +71,10 @@
     - "-Djava.io.tmpdir=../sonatype-work/nexus3/tmp"
     - "-Dkaraf.startLocalConsole=false"
 
+- name: Change ownership of nexus directory
+  command: sudo chown -R nexus:nexus /app/nexus
+  become: true 
+
 - name: Change ownership of sonatype-work directory
   command: sudo chown -R nexus:nexus /app/sonatype-work
   become: true   
