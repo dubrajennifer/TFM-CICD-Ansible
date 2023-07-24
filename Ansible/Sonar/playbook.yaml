@@ -5,7 +5,9 @@
   remote_user: ubuntu
   become: true
   gather_facts: no
-  vars:
-    ansible_python_interpreter: /usr/bin/python3
-  roles:
-    - sonarqube
+  collections:
+    - community.general
+  tasks:
+    - name: Install SonarQube
+      community.general.sonarqube:
+        version: "8.9.1" 
