@@ -1,0 +1,5 @@
+# vars/main.yml
+sonarqube_version: "8.9.0.43852"    # Specify the desired SonarQube version
+sonarqube_install_dir: "/opt/sonarqube"
+sonarqube_user: "sonarqube"
+sonarqube_group: "sonarqube"

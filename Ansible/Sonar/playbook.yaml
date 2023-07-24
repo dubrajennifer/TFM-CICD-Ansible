@@ -6,4 +6,4 @@
   become: true
   gather_facts: yes
   roles:
-    - lrk.sonarqube
+    - sonarqube

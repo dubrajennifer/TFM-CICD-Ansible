@@ -1,0 +1,43 @@
+# tasks/main.yml
+---
+- name: Create SonarQube installation directory
+  file:
+    path: "{{ sonarqube_install_dir }}"
+    state: directory
+    owner: "{{ sonarqube_user }}"
+    group: "{{ sonarqube_group }}"
+
+- name: Copy SonarQube distribution zip
+  copy:
+    src: "files/sonarqube-{{ sonarqube_version }}.zip"
+    dest: "{{ sonarqube_install_dir }}/sonarqube-{{ sonarqube_version }}.zip"
+    remote_src: yes
+    owner: "{{ sonarqube_user }}"
+    group: "{{ sonarqube_group }}"
+    mode: "0644"
+
+- name: Extract SonarQube
+  unarchive:
+    src: "{{ sonarqube_install_dir }}/sonarqube-{{ sonarqube_version }}.zip"
+    dest: "{{ sonarqube_install_dir }}"
+    remote_src: yes
+    owner: "{{ sonarqube_user }}"
+    group: "{{ sonarqube_group }}"
+    mode: "0755"
+    creates: "{{ sonarqube_install_dir }}/sonarqube-{{ sonarqube_version }}"
+
+- name: Create symbolic link to SonarQube installation
+  file:
+    src: "{{ sonarqube_install_dir }}/sonarqube-{{ sonarqube_version }}"
+    dest: "{{ sonarqube_install_dir }}/sonarqube"
+    state: link
+    owner: "{{ sonarqube_user }}"
+    group: "{{ sonarqube_group }}"
+
+- name: Copy SonarQube properties file
+  template:
+    src: "templates/sonar.properties.j2"
+    dest: "{{ sonarqube_install_dir }}/sonarqube/conf/sonar.properties"
+    owner: "{{ sonarqube_user }}"
+    group: "{{ sonarqube_group }}"
+    mode: "0644"

@@ -88,7 +88,7 @@
 
 - name: Copy Nexus service file
   template:
-    src: nexus.service.j2
+    src: templates/nexus.service.j2
     dest: /etc/systemd/system/nexus.service
 
 - name: Start Nexus service
