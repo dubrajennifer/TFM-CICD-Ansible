@@ -1,0 +1,60 @@
+---
+#task to install Nexus
+- name: Create Nexus user
+    user:
+      name: "{{ nexus_user }}"
+      comment: "Nexus User"
+      shell: "{{ nexus_user_shell }}"
+      home: "{{ nexus_user_home }}"
+      createhome: yes
+      state: present
+
+- name: Create Nexus installation directory
+  file:
+    path: "{{ nexus_install_dir }}"
+    owner: nexus
+    group: nexus
+    state: directory
+
+- name: Download Nexus tar.gz
+  get_url:
+    url: "{{ nexus_tar_url }}"
+    dest: "{{ nexus_install_dir }}/nexus.tar.gz"
+
+- name: Extract Nexus
+  unarchive:
+    src: "{{ nexus_install_dir }}/nexus.tar.gz"
+    dest: "{{ nexus_install_dir }}"
+    remote_src: yes
+    creates: "{{ nexus_install_dir }}/nexus-3.*"
+
+- name: Move Nexus directory
+  file:
+    src: "{{ nexus_install_dir }}/nexus-3*"
+    dest: "{{ nexus_install_dir }}/nexus"
+    state: link
+
+- name: Set Nexus run_as_user
+  lineinfile:
+    path: "{{ nexus_install_dir }}/bin/nexus.rc"
+    regexp: '^\\s*run_as_user=.*$'
+    line: 'run_as_user="nexus"'
+
+- name: Set Nexus JVM options
+  lineinfile:
+    path: "{{ nexus_install_dir }}/bin/nexus.vmoptions"
+    regexp: '^\\s*{{ item.key }}=.*$'
+    line: '{{ item.key }}={{ item.value }}'
+  with_items: "{{ nexus_vmoptions }}"
+
+- name: Copy Nexus service file
+  template:
+    src: nexus.service.j2
+    dest: /etc/systemd/system/nexus.service
+
+- name: Start Nexus service
+  systemd:
+    name: nexus
+    state: started
+    enabled: yes
+    daemon_reload: yes

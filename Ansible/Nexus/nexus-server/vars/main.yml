@@ -1,8 +1,8 @@
--nexus_url: https://download.sonatype.com/nexus/3/latest-unix.tar.gz
--nexus_user: nexus
--nexus_group: nexus
--nexus_dir: /opt/
--nexussonar_type_dir: /opt/sonatype-work
--nexus_rc_file: /opt/nexus/bin/
--nexus.rcservice_file_location: /etc/systemd/system/
--nexus_service_loc: /opt/nexus/bin/nexus
+nexus_install_dir: /app/nexus
+nexus_tar_url: https://download.sonatype.com/nexus/3/latest-unix.tar.gz
+nexus_vmoptions:
+  - { key: "-Xms", value: "1024m" }
+  - { key: "-Xmx", value: "1024m" }
+nexus_user: "nexus"
+nexus_user_home: "/home/{{ nexus_user }}"
+nexus_user_shell: "/bin/bash"
