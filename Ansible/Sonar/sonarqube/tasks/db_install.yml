@@ -22,11 +22,19 @@
     mode: '0700'
 
 - name: Change permissions data directory
-  shell: sudo chmod -R 777 /var/lib/jenkins/.m2/repository/
+  shell: sudo chmod -R 777 /var/lib/pgsql/data
 
 - name: Initialize PostgreSQL database
   command: postgresql-setup initdb
   become_user: postgres
+
+- name: Update PostgreSQL authentication method in pg_hba.conf
+  become: yes
+  lineinfile:
+    path: /var/lib/pgsql/data/pg_hba.conf # Replace with the correct path to your pg_hba.conf file
+    regexp: '^local\s+all\s+all\s+(peer|ident)\s*$'
+    line: 'local   all             all                                     md5'
+    backup: yes
 
 - name: Start PostgreSQL service
   service:
