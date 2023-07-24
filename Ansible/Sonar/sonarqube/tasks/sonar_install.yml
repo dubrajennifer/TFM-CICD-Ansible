@@ -1,17 +1,32 @@
 # tasks/main.yml
 ---
-- name: Add SonarQube Repository
-  yum_repository:
-    name: sonarqube
-    baseurl: https://binaries.sonarsource.com/Distribution/sonarqube/sonarqube-8.9.1.44547.zip
-    description: SonarQube Repository
-    enabled: yes
-    gpgcheck: no
+- name: Download SonarQube archive
+  get_url:
+    url: "https://binaries.sonarsource.com/Distribution/sonarqube/sonarqube-9.4.0.54424.zip"
+    dest: "/tmp/sonarqube-9.4.0.54424.zip"
 
-- name: Install SonarQube
-  yum:
-    name: sonarqube
-    state: latest
+- name: Unzip SonarQube archive
+  unarchive:
+    src: "/tmp/sonarqube-9.4.0.54424.zip"
+    dest: "/opt"
+    remote_src: yes
+    creates: "/opt/sonarqube-9.4.0.54424"
+
+- name: Configure SonarQube
+  template:
+    src: sonar.properties.j2
+    dest: /opt/sonarqube-9.4.0.54424/conf/sonar.properties
+    owner: sonarqube
+    group: sonarqube
+    mode: 0644
+
+- name: Create SonarQube systemd service
+  template:
+    src: sonarqube.service.j2
+    dest: /etc/systemd/system/sonarqube.service
+    owner: root
+    group: root
+    mode: 0644
 
 - name: Start SonarQube service
   service:
