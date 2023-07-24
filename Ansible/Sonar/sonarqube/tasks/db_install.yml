@@ -1,11 +1,12 @@
 ---
 - name: Install Python3 and pip
-  shell: "sudo yum install python3 && sudo yum install python3-pip"
+  shell: "sudo yum install python3 && sudo yum install python3-pip -y && sudo yum install gcc -y && sudo yum install python3-devel -y"
 
-- name: Install psycopg2 using pip
+- name: Install psycopg2 using pip for Python 3
   pip:
     name: psycopg2
     state: present
+    executable: pip3
 
 - name: Install PostgreSQL using yum
   shell: "sudo yum install postgresql-server -y"
