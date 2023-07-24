@@ -13,3 +13,5 @@ sonarqube_db_user: "sonarqube_user"
 sonarqube_db_password: "sonarqube_password"
 sonarqube_db_host: "localhost"
 sonarqube_db_port: "5432"
+
+mariadb_root_password: "rootpwd"

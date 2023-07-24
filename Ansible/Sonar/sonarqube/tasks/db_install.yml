@@ -1,10 +1,16 @@
 ---
+- name: Install required package for debconf-show
+  package:
+    name: debconf-utils
+    state: present
+
 - name: Set root password for MariaDB
-  debconf:
-    name: 'mariadb-server'
-    question: 'mariadb-server/root_password'
-    vtype: 'password'
-    value: 'rootpwd' 
+  community.mysql.mysql_user:
+    name: root
+    password: "{{ mariadb_root_password }}"
+    login_user: root
+    login_password: ""
+    check_implicit_admin: true
 
 - name: Install MariaDB server
   package:
@@ -28,5 +34,5 @@
     name: sonarqube_db
     state: import
     login_user: root
-    login_password: rootpwd
+    login_password: "{{ mariadb_root_password }}"
     target: /tmp/sonarqube_setup.sql  
