@@ -4,7 +4,7 @@
 
 - name: Install psycopg2 using pip for Python 3
   pip:
-    name: psycopg2
+    name: psycopg2-binary
     state: present
     executable: pip3
 
