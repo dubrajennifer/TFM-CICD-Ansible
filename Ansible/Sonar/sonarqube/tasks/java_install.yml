@@ -1,6 +1,10 @@
 ---
 # tasks file for install the java
-- name: Install Java
+- name: Install JDK8
   yum:
     name: java-1.8.0-openjdk
     state: present
+
+- name: Install JDK11
+  shell:
+    sudo yum install java-11-amazon-corretto -y

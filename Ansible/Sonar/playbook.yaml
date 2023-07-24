@@ -1,9 +1,9 @@
 ---
-- name: Playbook to sonar setup
+- name: Playbook to nexus setup
   hosts: localhost
   become_method: sudo
   remote_user: ubuntu
   become: true
   gather_facts: yes
   roles:
-    -sonarqube
+    - sonarqube

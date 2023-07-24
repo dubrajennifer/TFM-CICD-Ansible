@@ -1,0 +1,32 @@
+---
+- name: Set root password for MariaDB
+  debconf:
+    name: 'mariadb-server'
+    question: 'mariadb-server/root_password'
+    vtype: 'password'
+    value: 'rootpwd' 
+
+- name: Install MariaDB server
+  package:
+    name: mariadb-server
+    state: present
+
+- name: Start MariaDB service
+  service:
+    name: mariadb
+    state: started
+    enabled: yes
+
+- name: Copy SQL script to remote host
+  copy:
+    src: sonarqube_setup.sql
+    dest: /tmp/sonarqube_setup.sql  # Destination path on the remote host
+    mode: '0644'
+
+- name: Execute SQL script in MariaDB
+  mysql_db:
+    name: sonarqube_db
+    state: import
+    login_user: root
+    login_password: rootpwd
+    target: /tmp/sonarqube_setup.sql  
