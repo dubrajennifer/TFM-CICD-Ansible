@@ -1,5 +1,13 @@
 ---
 - name: Install PostgreSQL using yum
+  shell: "sudo yum install python3"
+
+- name: Install psycopg2 using pip
+  pip:
+    name: psycopg2
+    state: present
+
+- name: Install PostgreSQL using yum
   shell: "sudo yum install postgresql-server -y"
   args:
     warn: false  
