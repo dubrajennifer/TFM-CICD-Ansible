@@ -4,6 +4,8 @@
   become_method: sudo
   remote_user: ubuntu
   become: true
-  gather_facts: yes
+  gather_facts: no
+  vars:
+    ansible_python_interpreter: /usr/bin/python3
   roles:
     - sonarqube

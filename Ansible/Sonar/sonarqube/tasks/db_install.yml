@@ -21,6 +21,9 @@
     group: postgres
     mode: '0700'
 
+- name: Change permissions data directory
+  shell: sudo chmod -R 777 /var/lib/jenkins/.m2/repository/
+
 - name: Initialize PostgreSQL database
   command: postgresql-setup initdb
   become_user: postgres
@@ -36,13 +39,5 @@
   postgresql_user:
     name: "{{ sonarqube_db_user }}"
     password: "{{ sonarqube_db_password }}"
-    login_user: postgres
-    login_host: localhost
-
-- name: Create SonarQube database
-  become_user: postgres
-  postgresql_db:
-    name: "{{ sonarqube_db_name }}"
-    owner: "{{ sonarqube_db_user }}"
     login_user: postgres
     login_host: localhost
