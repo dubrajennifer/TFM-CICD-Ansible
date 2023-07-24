@@ -1,13 +1,11 @@
 # tasks/main.yml
 ---
-# tasks/main.yml
----
 - name: Create SonarQube user
   user:
     name: "{{ sonarqube_user }}"
     state: present
     system: yes
-    shell: "/sbin/nologin"     # Set the desired shell (e.g., nologin to disable shell login)
+    shell: "/sbin/nologin"   
 
 - name: Create SonarQube installation directory
   file:
