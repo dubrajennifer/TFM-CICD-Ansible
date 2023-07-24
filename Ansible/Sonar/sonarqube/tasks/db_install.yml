@@ -1,0 +1,24 @@
+---
+- name: Install PostgreSQL
+  package:
+    name: postgresql
+    state: present
+
+- name: Start and enable PostgreSQL service
+  service:
+    name: postgresql
+    state: started
+    enabled: yes
+
+- name: Create SonarQube database and user
+  become_user: postgres
+  postgresql_user:
+    name: "{{ sonarqube_db_user }}"
+    password: "{{ sonarqube_db_password }}"
+    login_user: postgres
+    login_host: localhost
+  postgresql_db:
+    name: "{{ sonarqube_db_name }}"
+    owner: "{{ sonarqube_db_user }}"
+    login_user: postgres
+    login_host: localhost

@@ -1,4 +1,5 @@
 # templates/sonar.properties.j2
-sonar.jdbc.username=sonar
-sonar.jdbc.password=sonar_password
-sonar.jdbc.url=jdbc:postgresql://localhost/sonar
+sonar.jdbc.username={{ sonarqube_db_user }}
+sonar.jdbc.password={{ sonarqube_db_password }}
+sonar.jdbc.url=jdbc:postgresql://{{ sonarqube_db_host }}:{{ sonarqube_db_port }}/{{ sonarqube_db_name }}
+

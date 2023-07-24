@@ -6,3 +6,10 @@ sonarqube_install_dir: "/opt/sonarqube"
 sonarqube_user: "sonarqube"         
 sonarqube_group: "sonarqube"     
 sonarqube_service_name: "sonarqube"
+
+# Database configuration
+sonarqube_db_name: "sonarqube_db"
+sonarqube_db_user: "sonarqube_user"
+sonarqube_db_password: "sonarqube_password"
+sonarqube_db_host: "localhost"
+sonarqube_db_port: "5432"
