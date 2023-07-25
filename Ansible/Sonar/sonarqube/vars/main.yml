@@ -1,17 +1,1 @@
 # vars/main.yml
-sonarqube_version: "8.9.0.43852"    
-sonarqube_download_url: "https://binaries.sonarsource.com/Distribution/sonarqube/sonarqube-{{ sonarqube_version }}.zip"
-sonarqube_download_dest: "/tmp/sonarqube-{{ sonarqube_version }}.zip"
-sonarqube_install_dir: "/opt/sonarqube"
-sonarqube_user: "sonarqube"         
-sonarqube_group: "sonarqube"     
-sonarqube_service_name: "sonarqube"
-
-# Database configuration
-sonarqube_db_name: "sonarqube_db"
-sonarqube_db_user: "sonarqube_user"
-sonarqube_db_password: "sonarqube_password"
-sonarqube_db_host: "localhost"
-sonarqube_db_port: "5432"
-
-mariadb_root_password: "rootpwd"
