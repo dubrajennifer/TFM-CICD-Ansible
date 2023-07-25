@@ -5,6 +5,9 @@
   yum:
     name: docker
     state: latest
+
+- name: Install docker compose plugin
+  shell: "sudo yum install docker-compose-plugin"
     
 - name: Start & Enable docker
   systemd:
