@@ -1,9 +1,6 @@
 ---
-# tasks file for tomcat_setup_check
+# tasks file for docker
 
-- name: Install docker compose plugin
-  shell: "sudo yum install docker-compose-plugin"
-    
 - name: Start & Enable docker
   systemd:
       name: docker
