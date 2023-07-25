@@ -1,6 +1,8 @@
 # tasks/main.yml
 ---
 - name: Run docker-compose command
-  command: docker-compose -f docker-compose.yml up -d
+  command: docker-compose up -d
   args:
     chdir: sonarqube/templates
+  become: yes
+  become_user: root
