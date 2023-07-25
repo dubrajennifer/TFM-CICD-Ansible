@@ -6,12 +6,7 @@ pipeline {
         booleanParam(name: 'DEPLOY_ONLY', defaultValue: true, description: 'Only deploy')
         booleanParam(name: 'IS_ENVIRONMENT_UP', defaultValue: true, description: 'Is the server running?')
         booleanParam(name: 'INIT_ENVIRONMENT_VARIABLES', defaultValue: true, description: 'Initialize environment variables')
-        string(name: 'APP_SSH_CREDENTIALS_ID', defaultValue: 'prd-appservers-credentials-id', description: 'ID of the App Servers SSH credentials for deployment')
-        string(name: 'JENKINS_AWS_ID', defaultValue: 'aws-credentials-id', description: 'ID of AWS to use Jenkins')
-        string(name: 'SONAR_TOKEN', defaultValue: 'sqp_e1dbbd824eed6aa08be17f849ac933bbd9f7b54b', description: 'Sonar Token')
-        string(name: 'NEXUS_CREDENTIALS_ID', defaultValue: 'nexus-user-id', description: 'Credentials Nexus')
         string(name: 'NEXUS_IP', defaultValue: '34.216.203.59:8081', description: 'IP Nexus')
-        string(name: 'SONAR_HOST_URL', defaultValue: 'http://34.209.212.180:9000', description: 'Url Sonar')
     }
 
     environment {
@@ -20,7 +15,9 @@ pipeline {
         greenARN = 'arn:aws:elasticloadbalancing:us-west-2:307819018579:targetgroup/GreenTarget/f044e2ace6db39c0'
         blueIP = '52.10.6.56'
         greenIP = '35.163.209.190'
-        SONAR_CREDENTIALS_ID = 'sonar-user-credentials-id'
+        JENKINS_AWS_ID='aws-credentials-id'
+        APP_SSH_CREDENTIALS_ID='prd-appservers-credentials-id'
+        NEXUS_CREDENTIALS_ID='nexus-user-credentials-id'
     }
 
     tools {
@@ -40,7 +37,9 @@ pipeline {
 greenARN=${greenARN}
 blueIP=${blueIP}
 greenIP=${greenIP}
-SONAR_CREDENTIALS_ID = 'sonar-user-credentials-id'
+JENKINS_AWS_ID='aws-credentials-id'
+APP_SSH_CREDENTIALS_ID='prd-appservers-credentials-id'
+NEXUS_CREDENTIALS_ID='nexus-user-credentials-id'
 """
                     // Write the properties to a file
                     writeFile file: "${workspace}/variables.properties", text: propertiesContent
@@ -77,49 +76,6 @@ SONAR_CREDENTIALS_ID = 'sonar-user-credentials-id'
             }
         }
 
-        stage('Sonar') {
-            steps {
-                script {
-                    def deployOnly = params.DEPLOY_ONLY
-                    if (!deployOnly) {
-                        withSonarQubeEnv('SonarQubeServer') {
-                            script {
-                                // Set the SonarQube properties, including sonar.login
-                                def sonarProperties = [
-                                    "-Dsonar.projectKey=Openmeetings",
-                                    "-Dsonar.projectName=Openmeetings",
-                                    "-Dsonar.host.url=${SONAR_HOST_URL}",
-                                    "-Dsonar.login=${SONAR_TOKEN}"
-                                ]
-                                
-                                // Run the SonarQube scanner with the defined properties and other Maven goals
-                                sh "mvn clean verify sonar:sonar -DskipTests ${sonarProperties.join(' ')}"
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        
-/*
-        stage('Test') {
-            steps {
-                script {
-                    def deployOnly = params.DEPLOY_ONLY
-                    def skipTests = params.SKIP_TESTS
-                    if (!deployOnly || skipTests) {
-                        try {
-                            sh 'mvn test'
-                        } catch (Exception e) {
-                            catchError(buildResult: 'SUCCESS', stageResult: 'UNSTABLE') {
-                                echo "Tests failed but continuing pipeline execution"
-                            }
-                        }
-                    }
-                }
-            }
-        }
-*/
         stage('Package') {
             steps {
                 script {
@@ -167,7 +123,7 @@ SONAR_CREDENTIALS_ID = 'sonar-user-credentials-id'
                                 groupId: groupId,
                                 version: version,
                                 repository: "maven-nexus-repo",
-                                credentialsId: params.NEXUS_CREDENTIALS_ID,
+                                credentialsId: ${NEXUS_CREDENTIALS_ID},
                                 artifacts: [
                                     [artifactId: "${module}", classifier: '', file: jarFilePath, type: "${packaging}"],
                                     [artifactId: "${module}", classifier: '', file: pomFilePath, type: "pom"]
@@ -183,12 +139,10 @@ SONAR_CREDENTIALS_ID = 'sonar-user-credentials-id'
 
 
         stage('Deploy') {
-            parallel {
-                stage('Green') {
-                    steps {
-                        script {
-                            deployToEnvironment('Green')
-                        }
+            stage('Green') {
+                steps {
+                    script {
+                        deployToEnvironment()
                     }
                 }
             }
@@ -209,7 +163,9 @@ SONAR_CREDENTIALS_ID = 'sonar-user-credentials-id'
 greenARN=${env.greenARN}
 blueIP=${env.blueIP}
 greenIP=${env.greenIP}
-SONAR_CREDENTIALS_ID = 'sonar-user-credentials-id'
+JENKINS_AWS_ID='aws-credentials-id'
+APP_SSH_CREDENTIALS_ID='prd-appservers-credentials-id'
+NEXUS_CREDENTIALS_ID='nexus-user-credentials-id'
 """
                                 // Write the properties to a file
                                 writeFile file: "${workspace}/variables.properties", text: propertiesContent
@@ -222,38 +178,15 @@ SONAR_CREDENTIALS_ID = 'sonar-user-credentials-id'
 }
 
 
-def deployToEnvironment(String env) {
-    def targetIP = getTargetIP(env)
-    def offloadingCmd = getOffloadingCommand(env)
-    def deploymentCmd = getDeploymentCommand(env)
-    def validateCmd = getValidationCommand(env)
+def deployToEnvironment() {
+    def deploymentCmd = getDeploymentCommand()
+    def validateCmd = getValidationCommand()
 
-    stage("Offloading ${env}") {
+    stage("Deploying to Green group") {
         script {
             withCredentials([
                 sshUserPrivateKey(
-                    credentialsId: params.APP_SSH_CREDENTIALS_ID,
-                    keyFileVariable: 'SSH_KEY',
-                    passphraseVariable: 'SSH_PASSPHRASE',
-                    usernameVariable: 'SSH_USERNAME'
-                ),
-                [
-                    $class: 'AmazonWebServicesCredentialsBinding',
-                    accessKeyVariable: 'AWS_ACCESS_KEY',
-                    credentialsId: params.JENKINS_AWS_ID,
-                    secretKeyVariable: 'AWS_SECRET_KEY'
-                ]
-            ]) {
-                sh offloadingCmd
-            }
-        }
-    }
-
-    stage("Deploying to ${env}") {
-        script {
-            withCredentials([
-                sshUserPrivateKey(
-                    credentialsId: params.APP_SSH_CREDENTIALS_ID,
+                    credentialsId: ${APP_SSH_CREDENTIALS_ID},
                     keyFileVariable: 'SSH_KEY',
                     passphraseVariable: 'SSH_PASSPHRASE',
                     usernameVariable: 'SSH_USERNAME'
@@ -270,11 +203,11 @@ def deployToEnvironment(String env) {
         }
     }
 
-    stage("Validate and Add ${env} for testing") {
+    stage("Validate and Add Green group for testing") {
         script {
             withCredentials([
                 sshUserPrivateKey(
-                    credentialsId: params.APP_SSH_CREDENTIALS_ID,
+                    credentialsId: ${APP_SSH_CREDENTIALS_ID},
                     keyFileVariable: 'SSH_KEY',
                     passphraseVariable: 'SSH_PASSPHRASE',
                     usernameVariable: 'SSH_USERNAME'
@@ -292,61 +225,30 @@ def deployToEnvironment(String env) {
     }
 }
 
-def getTargetIP(String env) {
-    if (env == 'Green') {
-        return greenIP
-    } else if (env == 'Blue') {
-        return blueIP
-    }
-}
 
-def getOffloadingCommand(String env) {
-    def targetIP = getTargetIP(env)
-
+def getDeploymentCommand() {
     return """
-        ssh-keyscan -H ${targetIP} >> ~/.ssh/known_hosts
-        scp -i \${SSH_KEY} -r /var/lib/jenkins/workspace/*-openmeetigs/openmeetings-server/target/ ec2-user@${targetIP}:/home/ec2-user/openmeetings
-        ssh -i \${SSH_KEY} ec2-user@${targetIP} 'sudo tar -xzf /home/ec2-user/openmeetings/target/*SNAPSHOT.tar.gz --strip-components=1 -C /home/ec2-user/openmeetings-app && sudo /home/ec2-user/openmeetings-app/bin/startup.sh'
+        ssh-keyscan -H ${greenIP} >> ~/.ssh/known_hosts
+        scp -i \${SSH_KEY} -r /var/lib/jenkins/workspace/*-openmeetigs/openmeetings-server/target/ ec2-user@${greenIP}:/home/ec2-user/openmeetings
+        ssh -i \${SSH_KEY} ec2-user@${greenIP} 'sudo tar -xzf /home/ec2-user/openmeetings/target/*SNAPSHOT.tar.gz --strip-components=1 -C /home/ec2-user/openmeetings-app && sudo /home/ec2-user/openmeetings-app/bin/startup.sh'
     """
 }
 
-def getDeploymentCommand(String env) {
-    def targetIP = getTargetIP(env)
+def getValidationCommand() {
 
     return """
-        ssh-keyscan -H ${targetIP} >> ~/.ssh/known_hosts
-        scp -i \${SSH_KEY} -r /var/lib/jenkins/workspace/*-openmeetigs/openmeetings-server/target/ ec2-user@${targetIP}:/home/ec2-user/openmeetings
-        ssh -i \${SSH_KEY} ec2-user@${targetIP} 'sudo tar -xzf /home/ec2-user/openmeetings/target/*SNAPSHOT.tar.gz --strip-components=1 -C /home/ec2-user/openmeetings-app && sudo /home/ec2-user/openmeetings-app/bin/startup.sh'
-    """
-}
-
-def getValidationCommand(String env) {
-    def targetIP = getTargetIP(env)
-    def selectedTargetARN = getTargetARN(env)
-    def otherTargetARN = getTargetARN(env == 'Green' ? 'Blue' : 'Green')
-
-    return """
-        if [ "\$( curl -o /dev/null -s -I -w '%{http_code}' http://${targetIP}:5080/)" -eq 200 ]
+        if [ "\$( curl -o /dev/null -s -I -w '%{http_code}' http://${greenIP}:5080/)" -eq 200 ]
         then
             echo "** BUILD IS SUCCESSFUL **"
-            curl -I http://${targetIP}:5080/
+            curl -I http://${greenIP}:5080/
             aws configure set aws_access_key_id \$AWS_ACCESS_KEY
             aws configure set aws_secret_access_key \$AWS_SECRET_KEY
             aws configure set region us-west-2
-            aws elbv2 modify-listener --listener-arn \${listenerARN} --default-actions '[{\"Type\": \"forward\",\"Order\": 1,\"ForwardConfig\": {\"TargetGroups\": [{\"TargetGroupArn\": \"${otherTargetARN}\", \"Weight\": 0 },{\"TargetGroupArn\": \"${selectedTargetARN}\", \"Weight\": 1 }],\"TargetGroupStickinessConfig\": {\"Enabled\": true,\"DurationSeconds\": 1}}}]'
+            aws elbv2 modify-listener --listener-arn \${listenerARN} --default-actions '[{\"Type\": \"forward\",\"Order\": 1,\"ForwardConfig\": {\"TargetGroups\": [{\"TargetGroupArn\": \"${blueARN}\", \"Weight\": 0 },{\"TargetGroupArn\": \"${greenARN}\", \"Weight\": 1 }],\"TargetGroupStickinessConfig\": {\"Enabled\": true,\"DurationSeconds\": 1}}}]'
         else
             echo "** BUILD IS FAILED ** Health check returned non 200 status code"
-            curl -I http://${targetIP}:5080/
+            curl -I http://${greenIP}:5080/
             exit 2
         fi
     """
 }
-
-def getTargetARN(String env) {
-    if (env == 'Green') {
-        return greenARN
-    } else if (env == 'Blue') {
-        return blueARN
-    }
-}
-
