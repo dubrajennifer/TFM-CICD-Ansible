@@ -55,5 +55,11 @@
 - name: Change permissions .m2/repository
   shell: sudo chmod -R 777 /var/lib/jenkins/.m2/repository/
      
-- name: Create directory known_hosts
-  shell: sudo mkdir -p  /var/lib/jenkins/.ssh/known_hosts
+- name: Create directory .shh
+  shell: sudo mkdir -p  /var/lib/jenkins/.ssh/
+
+- name: Create file known_hosts
+  shell: sudo touch /var/lib/jenkins/.ssh/known_hosts
+
+- name: Change permissions known_hosts
+  shell: sudo chmod -R 777 /var/lib/jenkins/.ssh/known_hosts
