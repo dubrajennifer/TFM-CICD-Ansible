@@ -10,7 +10,7 @@ if rc == 0:
         if "java-11-openjdk" in each_line and "drwxr-xr-x" in each_line:
             print(f"JAVA_HOME=/usr/lib/jvm/{each_line.split()[8]}\n")
 
-        if "apache-maven-3.8.8" in each_line and "drwxr-xr-x" in each_line:
+        if "apache-maven-3.9.3" in each_line and "drwxr-xr-x" in each_line:
             print(f"M2_HOME=/opt/{each_line.split()[8]}\n\nM2=/opt/{each_line.split()[8]}/bin\n")
             print("PATH=$PATH:$HOME/bin$JAVA_HOME:$M2_HOME:$M2\n\nexport PATH")
 
