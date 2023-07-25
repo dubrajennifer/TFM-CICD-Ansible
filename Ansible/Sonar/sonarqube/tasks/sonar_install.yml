@@ -1,6 +1,6 @@
 # tasks/main.yml
 ---
- - name: Run docker-compose command
-      command: docker-compose -f docker-compose.yml up -d
-      args:
-        chdir: sonarqube/templates
+- name: Run docker-compose command
+  command: docker-compose -f docker-compose.yml up -d
+  args:
+    chdir: sonarqube/templates

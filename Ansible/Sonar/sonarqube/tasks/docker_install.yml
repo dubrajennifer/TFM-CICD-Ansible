@@ -1,11 +1,6 @@
 ---
 # tasks file for tomcat_setup_check
 
-- name: install the latest version of Docker
-  yum:
-    name: docker
-    state: latest
-
 - name: Install docker compose plugin
   shell: "sudo yum install docker-compose-plugin"
     
