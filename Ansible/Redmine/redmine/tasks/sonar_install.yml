@@ -1,0 +1,8 @@
+# tasks/main.yml
+---
+- name: Run docker-compose command
+  command: docker-compose up -d
+  args:
+    chdir: redmine/templates
+  become: yes
+  become_user: root

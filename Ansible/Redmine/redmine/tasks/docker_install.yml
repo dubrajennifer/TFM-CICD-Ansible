@@ -1,0 +1,8 @@
+---
+# tasks file for docker
+
+- name: Start & Enable docker
+  systemd:
+      name: docker
+      state: started
+      enabled: true
