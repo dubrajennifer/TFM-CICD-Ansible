@@ -2,19 +2,22 @@ pipeline {
     agent any
 
     parameters {
-        booleanParam(name: 'SKIP_TESTS', defaultValue: true, description: 'Skip tests')
-        booleanParam(name: 'DEPLOY_ONLY', defaultValue: true, description: 'Only deploy')
+        booleanParam(name: 'SKIP_TESTS', defaultValue: false, description: 'Skip tests')
+        booleanParam(name: 'SKIP_SONAR', defaultValue: false, description: 'Skip sonar analysis')
+        booleanParam(name: 'DEPLOY_ONLY', defaultValue: false, description: 'Only deploy')
+        string(name: 'BRANCH_TO_BUILD', defaultValue: 'master', description: 'Specify the Git branch to build')
     }
 
     environment {
-        targetIP = '35.163.209.190'
+        APP_SERVER_IP = '35.91.76.128'
+        NEXUS_IP='54.212.45.242:8081'
+        SONAR_TOKEN='sqa_7fda6cf749854703c42b1423b01829f2a41e21fa'
         SONAR_CREDENTIALS_ID = 'sonar-user-credentials-id'
         JENKINS_AWS_ID='aws-credentials-id'
         APP_SSH_CREDENTIALS_ID='stg-appservers-credentials-id'
         NEXUS_CREDENTIALS_ID='nexus-user-credentials-id'
-        SONAR_HOST_URL='http://34.209.212.180:9000'
-        SONAR_TOKEN='sqp_e1dbbd824eed6aa08be17f849ac933bbd9f7b54b'
-        NEXUS_IP='34.216.203.59:8081'
+        SONAR_PROJECT='Openmeetings'
+        GIT_REPOSITORY='https://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@github.com/dubrajennifer/TFM-CICD-Apache-openmeetings.git'
     }
 
     tools {
@@ -22,36 +25,39 @@ pipeline {
     }
     stages {
        stage('Checkout') {
+            when {
+                expression {
+                    return !params.DEPLOY_ONLY
+                }
+            }
             steps {
                 script {
-                    def deployOnly = params.DEPLOY_ONLY
-                    if (!deployOnly) {
-                        cleanWs()
-                    }
+                    cleanWs()
                 }
                 // Checkout the Git repository
-                git 'https://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@github.com/dubrajennifer/TFM-CICD-Apache-openmeetings.git'
+               git branch: "${params.BRANCH_TO_BUILD}", url: "${GIT_REPOSITORY}"
             }
         }
 
         stage('Sonar') {
+            when {
+                expression {
+                    return !params.SKIP_SONAR
+                }
+            }
             steps {
                 script {
-                    def deployOnly = params.DEPLOY_ONLY
-                    if (!deployOnly) {
-                        withSonarQubeEnv('SonarQubeServer') {
-                            script {
-                                // Set the SonarQube properties, including sonar.login
-                                def sonarProperties = [
-                                    "-Dsonar.projectKey=Openmeetings",
-                                    "-Dsonar.projectName=Openmeetings",
-                                    "-Dsonar.host.url=${SONAR_HOST_URL}",
-                                    "-Dsonar.login=${SONAR_TOKEN}"
-                                ]
-                                
-                                // Run the SonarQube scanner with the defined properties and other Maven goals
-                                sh "mvn clean verify sonar:sonar -DskipTests ${sonarProperties.join(' ')}"
-                            }
+                    withSonarQubeEnv('SonarQubeServer') {
+                        script {
+                            // Set the SonarQube properties, including sonar.login
+                            def sonarProperties = [
+                                "-Dsonar.projectKey=${SONAR_PROJECT}",
+                                "-Dsonar.projectName${SONAR_PROJECT}",
+                                "-Dsonar.login=${SONAR_TOKEN}"
+                            ]
+                            
+                            // Run the SonarQube scanner with the defined properties and other Maven goals
+                            sh "mvn clean verify sonar:sonar -DskipTests ${sonarProperties.join(' ')}"
                         }
                     }
                 }
@@ -60,37 +66,47 @@ pipeline {
         
 
         stage('Test') {
+            when {
+                expression {
+                    return !params.SKIP_TESTS
+                }
+            }
             steps {
-                script {
-                    def deployOnly = params.DEPLOY_ONLY
-                    def skipTests = params.SKIP_TESTS
-                    if (!deployOnly || skipTests) {
-                        try {
-                            sh 'mvn test'
-                        } catch (Exception e) {
-                            catchError(buildResult: 'SUCCESS', stageResult: 'UNSTABLE') {
-                                echo "Tests failed but continuing pipeline execution"
-                            }
+                sh 'mvn test'
+            }
+            post {
+                always {
+                    script {
+                        if (currentBuild.result == 'FAILURE') {
+                            currentBuild.result = 'UNSTABLE'
                         }
                     }
                 }
             }
         }
 
+
         stage('Package') {
+            when {
+                expression {
+                    return !params.DEPLOY_ONLY
+                }
+            }
             steps {
                 script {
-                    def deployOnly = params.DEPLOY_ONLY
-                    if (!deployOnly) {
-                        sh 'mvn install -DskipTests=true -Dwicket.configuration=DEVELOPMENT -Dsite.skip=true'
-                    }
-
+                    cleanWs()
+                    sh 'mvn install -DskipTests=true -Dwicket.configuration=DEVELOPMENT -Dsite.skip=true'
                 }
             }
         }
        
 
         stage("Publish to Nexus Repository Manager") {
+            when {
+                expression {
+                    return !params.DEPLOY_ONLY
+                }
+            }
             steps {
                 script {
                     def parentPomFilePath = "${workspace}/pom.xml"
@@ -123,8 +139,8 @@ pipeline {
                                 nexusUrl: ${NEXUS_IP},
                                 groupId: groupId,
                                 version: version,
-                                repository: "maven-nexus-repo",
-                                credentialsId: ${NEXUS_CREDENTIALS_ID},
+                                repository: "stg-maven-repository",
+                                credentialsId: NEXUS_CREDENTIALS_ID,
                                 artifacts: [
                                     [artifactId: "${module}", classifier: '', file: jarFilePath, type: "${packaging}"],
                                     [artifactId: "${module}", classifier: '', file: pomFilePath, type: "pom"]
@@ -139,22 +155,25 @@ pipeline {
         }
 
     stage("Deploying to STG") {
-        script {
-            withCredentials([
-                sshUserPrivateKey(
-                    credentialsId: ${APP_SSH_CREDENTIALS_ID},
-                    keyFileVariable: 'SSH_KEY',
-                    passphraseVariable: 'SSH_PASSPHRASE',
-                    usernameVariable: 'SSH_USERNAME'
-                )
-            ]) {
-                sh  """
-                    ssh-keyscan -H ${targetIP} >> ~/.ssh/known_hosts
-                    scp -i \${SSH_KEY} -r /var/lib/jenkins/workspace/*-openmeetigs/openmeetings-server/target/ ec2-user@${targetIP}:/home/ec2-user/openmeetings
-                    ssh -i \${SSH_KEY} ec2-user@${targetIP} 'sudo tar -xzf /home/ec2-user/openmeetings/target/*SNAPSHOT.tar.gz --strip-components=1 -C /home/ec2-user/openmeetings-app && sudo /home/ec2-user/openmeetings-app/bin/startup.sh'
-                """
+        steps{
+            script {
+                withCredentials([
+                    sshUserPrivateKey(
+                        credentialsId: APP_SSH_CREDENTIALS_ID,
+                        keyFileVariable: 'SSH_KEY',
+                        passphraseVariable: 'SSH_PASSPHRASE',
+                        usernameVariable: 'SSH_USERNAME'
+                    )
+                ]) {
+                    sh  """
+                        ssh-keyscan -H ${APP_SERVER_IP} >> ~/.ssh/known_hosts
+                        scp -i \${SSH_KEY} -r ${workspace}/openmeetings-server/target/ ec2-user@${APP_SERVER_IP}:/home/ec2-user/openmeetings
+                        ssh -i \${SSH_KEY} ec2-user@${APP_SERVER_IP} 'sudo tar -xzf /home/ec2-user/openmeetings/target/*SNAPSHOT.tar.gz --strip-components=1 -C /home/ec2-user/openmeetings-app && sudo /home/ec2-user/openmeetings-app/bin/startup.sh'
+                    """
+                }
             }
         }
     }
 }
 
+}
