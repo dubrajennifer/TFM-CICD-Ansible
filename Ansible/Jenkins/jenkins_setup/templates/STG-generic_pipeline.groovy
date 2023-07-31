@@ -1,3 +1,5 @@
+def FAILED_STAGE
+
 pipeline {
     agent any
 
@@ -6,16 +8,19 @@ pipeline {
         booleanParam(name: 'SKIP_SONAR', defaultValue: false, description: 'Skip sonar analysis')
         booleanParam(name: 'DEPLOY_ONLY', defaultValue: false, description: 'Only deploy')
         string(name: 'BRANCH_TO_BUILD', defaultValue: 'master', description: 'Specify the Git branch to build')
+        string(name: 'STATIC_RECIPIENTS', defaultValue: 'jennifer.dubra@udc.es, software.dbr@gmail.com', description: 'Comma-separated list of static email recipients')
     }
 
     environment {
-        APP_SERVER_IP = '35.91.76.128'
-        NEXUS_IP='54.212.45.242:8081'
+        APP_SERVER_IP = '52.35.46.167'
+        NEXUS_IP='54.70.113.238:8081'
         SONAR_TOKEN='sqa_7fda6cf749854703c42b1423b01829f2a41e21fa'
         SONAR_CREDENTIALS_ID = 'sonar-user-credentials-id'
         JENKINS_AWS_ID='aws-credentials-id'
         APP_SSH_CREDENTIALS_ID='stg-appservers-credentials-id'
-        NEXUS_CREDENTIALS_ID='nexus-user-credentials-id'
+        NEXUS_CREDENTIALS_ID='nexus-user-credentials-id'        
+        STATIC_RECIPIENTS = "${params.STATIC_RECIPIENTS}"
+        DYNAMIC_RECIPIENTS = developers()
         SONAR_PROJECT='Openmeetings'
         GIT_REPOSITORY='https://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@github.com/dubrajennifer/TFM-CICD-Apache-openmeetings.git'
     }
@@ -32,6 +37,7 @@ pipeline {
             }
             steps {
                 script {
+                    FAILED_STAGE=env.STAGE_NAME
                     cleanWs()
                 }
                 // Checkout the Git repository
@@ -47,6 +53,7 @@ pipeline {
             }
             steps {
                 script {
+                    FAILED_STAGE=env.STAGE_NAME
                     withSonarQubeEnv('SonarQubeServer') {
                         script {
                             // Set the SonarQube properties, including sonar.login
@@ -78,6 +85,7 @@ pipeline {
                 always {
                     script {
                         if (currentBuild.result == 'FAILURE') {
+                            FAILED_STAGE=env.STAGE_NAME
                             currentBuild.result = 'UNSTABLE'
                         }
                     }
@@ -94,6 +102,7 @@ pipeline {
             }
             steps {
                 script {
+                    FAILED_STAGE=env.STAGE_NAME
                     cleanWs()
                     sh 'mvn install -DskipTests=true -Dwicket.configuration=DEVELOPMENT -Dsite.skip=true'
                 }
@@ -109,6 +118,7 @@ pipeline {
             }
             steps {
                 script {
+                    FAILED_STAGE=env.STAGE_NAME
                     def parentPomFilePath = "${workspace}/pom.xml"
                     def modules = sh(
                         script: "grep '<module>' ${parentPomFilePath} | sed 's/^.*<module>\\(.*\\)<\\/module>.*\$'/'\\1'/",
@@ -154,26 +164,39 @@ pipeline {
             }
         }
 
-    stage("Deploying to STG") {
-        steps{
-            script {
-                withCredentials([
-                    sshUserPrivateKey(
-                        credentialsId: APP_SSH_CREDENTIALS_ID,
-                        keyFileVariable: 'SSH_KEY',
-                        passphraseVariable: 'SSH_PASSPHRASE',
-                        usernameVariable: 'SSH_USERNAME'
-                    )
-                ]) {
-                    sh  """
-                        ssh-keyscan -H ${APP_SERVER_IP} >> ~/.ssh/known_hosts
-                        scp -i \${SSH_KEY} -r ${workspace}/openmeetings-server/target/ ec2-user@${APP_SERVER_IP}:/home/ec2-user/openmeetings
-                        ssh -i \${SSH_KEY} ec2-user@${APP_SERVER_IP} 'sudo tar -xzf /home/ec2-user/openmeetings/target/*SNAPSHOT.tar.gz --strip-components=1 -C /home/ec2-user/openmeetings-app && sudo /home/ec2-user/openmeetings-app/bin/startup.sh'
-                    """
+        stage("Deploying to STG") {
+            steps{
+                script {
+                    FAILED_STAGE=env.STAGE_NAME
+                    withCredentials([
+                        sshUserPrivateKey(
+                            credentialsId: APP_SSH_CREDENTIALS_ID,
+                            keyFileVariable: 'SSH_KEY',
+                            passphraseVariable: 'SSH_PASSPHRASE',
+                            usernameVariable: 'SSH_USERNAME'
+                        )
+                    ]) {
+                        sh  """
+                            ssh-keyscan -H ${APP_SERVER_IP} >> ~/.ssh/known_hosts
+                            scp -i \${SSH_KEY} -r ${workspace}/openmeetings-server/target/ ec2-user@${APP_SERVER_IP}:/home/ec2-user/openmeetings
+                            ssh -i \${SSH_KEY} ec2-user@${APP_SERVER_IP} 'sudo tar -xzf /home/ec2-user/openmeetings/target/*SNAPSHOT.tar.gz --strip-components=1 -C /home/ec2-user/openmeetings-app && sudo /home/ec2-user/openmeetings-app/bin/startup.sh'
+                        """
+                    }
                 }
             }
         }
     }
-}
+    post {
+        always {
+            script {
+                if (currentBuild.result == 'FAILURE' || currentBuild.result == 'UNSTABLE') {
+                    def staticRecipients = env.STATIC_RECIPIENTS
+                    emailext subject: "[JENKINS][${env.JOB_NAME}] ${currentBuild.result} at ${FAILED_STAGE}",
+                             body: "The build has failed or is unstable in stage: ${FAILED_STAGE} \nCheck console output at ${env.BUILD_URL} to view the results.",
+                             to: "${staticRecipients}"
+                }
+            }
+        }
+    }
 
 }
