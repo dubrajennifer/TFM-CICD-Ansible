@@ -16,7 +16,7 @@ pipeline {
 
     environment {
         listenerARN = 'arn:aws:elasticloadbalancing:us-west-2:307819018579:listener/app/BlueGreenALB/f85942f731cefec0/03464d0d49b5a9fe'
-        blueARN = 'arn:aws:elasticloadbalancing:us-west-2:307819018579:targetgroup/BlueTarget/6217f7175c85f973'
+        blueARN = 'arn:aws:elasticloadbalancing:us-west-2:307819018579:targetgroup/BTarget/178ddca1e7962c2e'
         greenARN = 'arn:aws:elasticloadbalancing:us-west-2:307819018579:targetgroup/GreenTarget/f044e2ace6db39c0'
         blueIP = '52.10.6.56'
         greenIP = '35.163.209.190'

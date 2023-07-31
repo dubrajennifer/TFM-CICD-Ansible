@@ -35,6 +35,7 @@
 - name: Print init password Jenkins
   debug:
     var: result.stdout
+    
 - name: Change file ownership, group and permissions to docker.sock
   ansible.builtin.file:
     path: /var/run/docker.sock

@@ -14,14 +14,11 @@ pipeline {
     environment {
         APP_SERVER_IP = '52.35.46.167'
         NEXUS_IP='54.70.113.238:8081'
-        SONAR_TOKEN='sqa_7fda6cf749854703c42b1423b01829f2a41e21fa'
-        SONAR_CREDENTIALS_ID = 'sonar-user-credentials-id'
         JENKINS_AWS_ID='aws-credentials-id'
         APP_SSH_CREDENTIALS_ID='stg-appservers-credentials-id'
         NEXUS_CREDENTIALS_ID='nexus-user-credentials-id'        
         STATIC_RECIPIENTS = "${params.STATIC_RECIPIENTS}"
         DYNAMIC_RECIPIENTS = developers()
-        SONAR_PROJECT='Openmeetings'
         GIT_REPOSITORY='https://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@github.com/dubrajennifer/TFM-CICD-Apache-openmeetings.git'
     }
 
@@ -37,11 +34,19 @@ pipeline {
             }
             steps {
                 script {
-                    FAILED_STAGE=env.STAGE_NAME
                     cleanWs()
                 }
                 // Checkout the Git repository
                git branch: "${params.BRANCH_TO_BUILD}", url: "${GIT_REPOSITORY}"
+            }
+            post {
+                always {
+                    script {
+                        if (currentBuild.result == 'FAILURE' || currentBuild.result == 'UNSTABLE')  {
+                            FAILED_STAGE=env.STAGE_NAME
+                        }
+                    }
+                }
             }
         }
 
@@ -53,14 +58,11 @@ pipeline {
             }
             steps {
                 script {
-                    FAILED_STAGE=env.STAGE_NAME
                     withSonarQubeEnv('SonarQubeServer') {
                         script {
-                            // Set the SonarQube properties, including sonar.login
                             def sonarProperties = [
-                                "-Dsonar.projectKey=${SONAR_PROJECT}",
-                                "-Dsonar.projectName${SONAR_PROJECT}",
-                                "-Dsonar.login=${SONAR_TOKEN}"
+                                "-Dsonar.projectKey=${env.JOB_NAME}",
+                                "-Dsonar.projectName${env.JOB_NAME}"
                             ]
                             
                             // Run the SonarQube scanner with the defined properties and other Maven goals
@@ -69,8 +71,16 @@ pipeline {
                     }
                 }
             }
+            post {
+                always {
+                    script {
+                        if (currentBuild.result == 'FAILURE' || currentBuild.result == 'UNSTABLE')  {
+                            FAILED_STAGE=env.STAGE_NAME
+                        }
+                    }
+                }
+            }
         }
-        
 
         stage('Test') {
             when {
@@ -84,10 +94,10 @@ pipeline {
             post {
                 always {
                     script {
-                        if (currentBuild.result == 'FAILURE') {
+                        if (currentBuild.result == 'FAILURE' || currentBuild.result == 'UNSTABLE')  {
                             FAILED_STAGE=env.STAGE_NAME
-                            currentBuild.result = 'UNSTABLE'
                         }
+                        cleanWs()
                     }
                 }
             }
@@ -102,15 +112,22 @@ pipeline {
             }
             steps {
                 script {
-                    FAILED_STAGE=env.STAGE_NAME
-                    cleanWs()
                     sh 'mvn install -DskipTests=true -Dwicket.configuration=DEVELOPMENT -Dsite.skip=true'
+                }
+            }
+            post {
+                always {
+                    script {
+                        if (currentBuild.result == 'FAILURE' || currentBuild.result == 'UNSTABLE')  {
+                            FAILED_STAGE=env.STAGE_NAME
+                        }
+                    }
                 }
             }
         }
        
 
-        stage("Publish to Nexus Repository Manager") {
+        stage("Nexus") {
             when {
                 expression {
                     return !params.DEPLOY_ONLY
@@ -118,7 +135,6 @@ pipeline {
             }
             steps {
                 script {
-                    FAILED_STAGE=env.STAGE_NAME
                     def parentPomFilePath = "${workspace}/pom.xml"
                     def modules = sh(
                         script: "grep '<module>' ${parentPomFilePath} | sed 's/^.*<module>\\(.*\\)<\\/module>.*\$'/'\\1'/",
@@ -146,7 +162,7 @@ pipeline {
                             nexusArtifactUploader(
                                 nexusVersion: "nexus3",
                                 protocol: "http",
-                                nexusUrl: ${NEXUS_IP},
+                                nexusUrl: NEXUS_IP,
                                 groupId: groupId,
                                 version: version,
                                 repository: "stg-maven-repository",
@@ -162,12 +178,20 @@ pipeline {
                     }
                 }
             }
+            post {
+                always {
+                    script {
+                        if (currentBuild.result == 'FAILURE' || currentBuild.result == 'UNSTABLE')  {
+                            FAILED_STAGE=env.STAGE_NAME
+                        }
+                    }
+                }
+            }
         }
 
         stage("Deploying to STG") {
             steps{
                 script {
-                    FAILED_STAGE=env.STAGE_NAME
                     withCredentials([
                         sshUserPrivateKey(
                             credentialsId: APP_SSH_CREDENTIALS_ID,
@@ -181,6 +205,15 @@ pipeline {
                             scp -i \${SSH_KEY} -r ${workspace}/openmeetings-server/target/ ec2-user@${APP_SERVER_IP}:/home/ec2-user/openmeetings
                             ssh -i \${SSH_KEY} ec2-user@${APP_SERVER_IP} 'sudo tar -xzf /home/ec2-user/openmeetings/target/*SNAPSHOT.tar.gz --strip-components=1 -C /home/ec2-user/openmeetings-app && sudo /home/ec2-user/openmeetings-app/bin/startup.sh'
                         """
+                    }
+                }
+            }
+            post {
+                always {
+                    script {
+                        if (currentBuild.result == 'FAILURE' || currentBuild.result == 'UNSTABLE')  {
+                            FAILED_STAGE=env.STAGE_NAME
+                        }
                     }
                 }
             }

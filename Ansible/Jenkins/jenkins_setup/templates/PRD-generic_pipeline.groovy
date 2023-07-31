@@ -2,22 +2,25 @@ pipeline {
     agent any
 
     parameters {
-        booleanParam(name: 'SKIP_TESTS', defaultValue: true, description: 'Skip tests')
-        booleanParam(name: 'DEPLOY_ONLY', defaultValue: true, description: 'Only deploy')
-        booleanParam(name: 'IS_ENVIRONMENT_UP', defaultValue: true, description: 'Is the server running?')
-        booleanParam(name: 'INIT_ENVIRONMENT_VARIABLES', defaultValue: true, description: 'Initialize environment variables')
-        string(name: 'NEXUS_IP', defaultValue: '34.216.203.59:8081', description: 'IP Nexus')
+        booleanParam(name: 'DEPLOY_ONLY', defaultValue: false, description: 'Only deploy')
+        booleanParam(name: 'INIT_ENVIRONMENT_VARIABLES', defaultValue: false, description: 'Initialize environment variables')
+        string(name: 'NEXUS_IP', defaultValue: '54.212.45.242:8081', description: 'IP Nexus')
+        string(name: 'RELEASE_TO_BUILD', defaultValue: 'master', description: 'Specify the Git release to build')
+        string(name: 'STATIC_RECIPIENTS', defaultValue: 'jennifer.dubra@udc.es, software.dbr@gmail.com', description: 'Comma-separated list of static email recipients')
     }
 
     environment {
-        listenerARN = 'arn:aws:elasticloadbalancing:us-west-2:307819018579:listener/app/BlueGreenALB/f85942f731cefec0/03464d0d49b5a9fe'
-        blueARN = 'arn:aws:elasticloadbalancing:us-west-2:307819018579:targetgroup/BlueTarget/6217f7175c85f973'
-        greenARN = 'arn:aws:elasticloadbalancing:us-west-2:307819018579:targetgroup/GreenTarget/f044e2ace6db39c0'
-        blueIP = '52.10.6.56'
-        greenIP = '35.163.209.190'
+        listenerARN = 'arn:aws:elasticloadbalancing:us-west-2:307819018579:listener/app/BlueGreenALB/3135f40abe73eff2/3ab50eaad97a6028'
+        blueARN = 'arn:aws:elasticloadbalancing:us-west-2:307819018579:targetgroup/ATarget/224a2ccdbd8e0a4e'
+        greenARN = 'arn:aws:elasticloadbalancing:us-west-2:307819018579:targetgroup/BTarget/178ddca1e7962c2e'
+        blueIP = '54.186.211.106'
+        greenIP = '18.236.147.0'
         JENKINS_AWS_ID='aws-credentials-id'
         APP_SSH_CREDENTIALS_ID='prd-appservers-credentials-id'
         NEXUS_CREDENTIALS_ID='nexus-user-credentials-id'
+        STATIC_RECIPIENTS = "${params.STATIC_RECIPIENTS}"
+        GIT_REPOSITORY='https://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@github.com/dubrajennifer/TFM-CICD-Apache-openmeetings.git'
+
     }
 
     tools {
@@ -32,17 +35,18 @@ pipeline {
             }
             steps {
                 script {
-                    def propertiesContent = 
-"""blueARN=${blueARN}
-greenARN=${greenARN}
-blueIP=${blueIP}
-greenIP=${greenIP}
-JENKINS_AWS_ID='aws-credentials-id'
-APP_SSH_CREDENTIALS_ID='prd-appservers-credentials-id'
-NEXUS_CREDENTIALS_ID='nexus-user-credentials-id'
-"""
-                    // Write the properties to a file
+                    def propertiesContent = setEnvironmentVariables(env.blueARN,env.greenARN,env.blueIP, env.greenIP)
+                    // Write the environment variables to a file
                     writeFile file: "${workspace}/variables.properties", text: propertiesContent
+                }
+            }
+            post {
+                always {
+                    script {
+                        if (currentBuild.result == 'FAILURE' || currentBuild.result == 'UNSTABLE')  {
+                            FAILED_STAGE=env.STAGE_NAME
+                        }
+                    }
                 }
             }
         }
@@ -61,35 +65,71 @@ NEXUS_CREDENTIALS_ID='nexus-user-credentials-id'
                     }
                 }
             }
-        }
-
-        stage('Checkout') {
-            steps {
-                script {
-                    def deployOnly = params.DEPLOY_ONLY
-                    if (!deployOnly) {
-                        cleanWs()
+            post {
+                always {
+                    script {
+                        if (currentBuild.result == 'FAILURE' || currentBuild.result == 'UNSTABLE')  {
+                            FAILED_STAGE=env.STAGE_NAME
+                        }
                     }
                 }
+            }
+        }
+
+       stage('Checkout') {
+            when {
+                expression {
+                    return !params.DEPLOY_ONLY
+                }
+            }
+            steps {
+                script { 
+                    cleanWs()
+                }
                 // Checkout the Git repository
-                git 'https://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@github.com/dubrajennifer/TFM-CICD-Apache-openmeetings.git'
+               git branch: "${params.RELEASE_TO_BUILD}", url: "${GIT_REPOSITORY}"
+            }
+            post {
+                always {
+                    script {
+                        if (currentBuild.result == 'FAILURE' || currentBuild.result == 'UNSTABLE')  {
+                            FAILED_STAGE=env.STAGE_NAME
+                        }
+                    }
+                }
             }
         }
 
         stage('Package') {
+            when {
+                expression {
+                    return !params.DEPLOY_ONLY
+                }
+            }
             steps {
                 script {
-                    def deployOnly = params.DEPLOY_ONLY
-                    if (!deployOnly) {
-                        sh 'mvn install -DskipTests=true -Dwicket.configuration=DEVELOPMENT -Dsite.skip=true'
-                    }
+                    sh 'mvn install -DskipTests=true -Dwicket.configuration=DEVELOPMENT -Dsite.skip=true'
 
+                }
+            }
+            post {
+                always {
+                    script {
+                        if (currentBuild.result == 'FAILURE' || currentBuild.result == 'UNSTABLE')  {
+                            FAILED_STAGE=env.STAGE_NAME
+                        }
+                    }
                 }
             }
         }
        
 
-        stage("Publish to Nexus Repository Manager") {
+        stage("Nexus") {
+            when {
+                expression {
+                    return !params.DEPLOY_ONLY
+                }
+            }
             steps {
                 script {
                     def parentPomFilePath = "${workspace}/pom.xml"
@@ -122,8 +162,8 @@ NEXUS_CREDENTIALS_ID='nexus-user-credentials-id'
                                 nexusUrl: params.NEXUS_IP,
                                 groupId: groupId,
                                 version: version,
-                                repository: "maven-nexus-repo",
-                                credentialsId: ${NEXUS_CREDENTIALS_ID},
+                                repository: "prd-maven-repository",
+                                credentialsId: NEXUS_CREDENTIALS_ID,
                                 artifacts: [
                                     [artifactId: "${module}", classifier: '', file: jarFilePath, type: "${packaging}"],
                                     [artifactId: "${module}", classifier: '', file: pomFilePath, type: "pom"]
@@ -135,14 +175,25 @@ NEXUS_CREDENTIALS_ID='nexus-user-credentials-id'
                     }
                 }
             }
+            post {
+                always {
+                    script {
+                        if (currentBuild.result == 'FAILURE' || currentBuild.result == 'UNSTABLE')  {
+                            FAILED_STAGE=env.STAGE_NAME
+                        }
+                    }
+                }
+            }
         }
 
 
         stage('Deploy') {
-            stage('Green') {
-                steps {
-                    script {
-                        deployToEnvironment()
+            parallel {
+                stage('Green') {
+                    steps {
+                        script {
+                            deployToEnvironment()
+                        }
                     }
                 }
             }
@@ -150,31 +201,30 @@ NEXUS_CREDENTIALS_ID='nexus-user-credentials-id'
                 success {
                     script {
                         if (currentBuild.result == 'SUCCESS') {
-                                def blueARNtemp = env.blueARN
-                                env.blueARN = env.greenARN
-                                env.greenARN = blueARNtemp
-                                
-                                def blueIPtemp = env.blueIP
-                                env.blueIP = env.greenIP
-                                env.greenIP = blueIPtemp
-                                
-                               def propertiesContent = 
-"""blueARN=${env.blueARN}
-greenARN=${env.greenARN}
-blueIP=${env.blueIP}
-greenIP=${env.greenIP}
-JENKINS_AWS_ID='aws-credentials-id'
-APP_SSH_CREDENTIALS_ID='prd-appservers-credentials-id'
-NEXUS_CREDENTIALS_ID='nexus-user-credentials-id'
-"""
-                                // Write the properties to a file
-                                writeFile file: "${workspace}/variables.properties", text: propertiesContent
+                            def propertiesContent = setEnvironmentVariables(env.greenARN, env.blueARN, env.greenIP,env.blueIP)
+                            // Write the environment variables to a file
+                            writeFile file: "${env.WORKSPACE}/variables.properties", text: propertiesContent
+                        }
+                        
+                        if (currentBuild.result == 'FAILURE' || currentBuild.result == 'UNSTABLE')  {
+                            FAILED_STAGE=env.STAGE_NAME
                         }
                     }
                 }
             }
         }
-}
+    }
+    post {
+        always {
+            script {
+                if (currentBuild.result == 'FAILURE' || currentBuild.result == 'UNSTABLE') {
+                    emailext subject: "[JENKINS][${env.JOB_NAME}] ${currentBuild.result} at ${FAILED_STAGE}",
+                             body: "The build has failed or is unstable in stage: ${FAILED_STAGE} \nCheck console output at ${env.BUILD_URL} to view the results.",
+                             to: "${params.STATIC_RECIPIENTS}"
+                }
+            }
+        }
+    }
 }
 
 
@@ -182,11 +232,11 @@ def deployToEnvironment() {
     def deploymentCmd = getDeploymentCommand()
     def validateCmd = getValidationCommand()
 
-    stage("Deploying to Green group") {
+    stage("Deploying") {
         script {
             withCredentials([
                 sshUserPrivateKey(
-                    credentialsId: ${APP_SSH_CREDENTIALS_ID},
+                    credentialsId: APP_SSH_CREDENTIALS_ID,
                     keyFileVariable: 'SSH_KEY',
                     passphraseVariable: 'SSH_PASSPHRASE',
                     usernameVariable: 'SSH_USERNAME'
@@ -194,20 +244,21 @@ def deployToEnvironment() {
                 [
                     $class: 'AmazonWebServicesCredentialsBinding',
                     accessKeyVariable: 'AWS_ACCESS_KEY',
-                    credentialsId: params.JENKINS_AWS_ID,
+                    credentialsId: JENKINS_AWS_ID,
                     secretKeyVariable: 'AWS_SECRET_KEY'
                 ]
             ]) {
                 sh deploymentCmd
             }
+            
         }
     }
 
-    stage("Validate and Add Green group for testing") {
+    stage("Route traffic") {
         script {
             withCredentials([
                 sshUserPrivateKey(
-                    credentialsId: ${APP_SSH_CREDENTIALS_ID},
+                    credentialsId: APP_SSH_CREDENTIALS_ID,
                     keyFileVariable: 'SSH_KEY',
                     passphraseVariable: 'SSH_PASSPHRASE',
                     usernameVariable: 'SSH_USERNAME'
@@ -215,7 +266,7 @@ def deployToEnvironment() {
                 [
                     $class: 'AmazonWebServicesCredentialsBinding',
                     accessKeyVariable: 'AWS_ACCESS_KEY',
-                    credentialsId: params.JENKINS_AWS_ID,
+                    credentialsId: JENKINS_AWS_ID,
                     secretKeyVariable: 'AWS_SECRET_KEY'
                 ]
             ]) {
@@ -229,7 +280,7 @@ def deployToEnvironment() {
 def getDeploymentCommand() {
     return """
         ssh-keyscan -H ${greenIP} >> ~/.ssh/known_hosts
-        scp -i \${SSH_KEY} -r /var/lib/jenkins/workspace/*-openmeetigs/openmeetings-server/target/ ec2-user@${greenIP}:/home/ec2-user/openmeetings
+        scp -i \${SSH_KEY} -r ${workspace}/openmeetings-server/target/ ec2-user@${greenIP}:/home/ec2-user/openmeetings
         ssh -i \${SSH_KEY} ec2-user@${greenIP} 'sudo tar -xzf /home/ec2-user/openmeetings/target/*SNAPSHOT.tar.gz --strip-components=1 -C /home/ec2-user/openmeetings-app && sudo /home/ec2-user/openmeetings-app/bin/startup.sh'
     """
 }
@@ -251,4 +302,18 @@ def getValidationCommand() {
             exit 2
         fi
     """
+}
+
+def setEnvironmentVariables( String arnBlue, String arnGreen, String ipBlue, String ipGreen) {
+    return """
+blueARN=${arnBlue}
+greenARN=${arnGreen}
+blueIP=${ipBlue}
+greenIP=${ipGreen}
+JENKINS_AWS_ID='aws-credentials-id'
+APP_SSH_CREDENTIALS_ID='prd-appservers-credentials-id'
+NEXUS_CREDENTIALS_ID='nexus-user-credentials-id'
+GIT_REPOSITORY='https://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@github.com/dubrajennifer/TFM-CICD-Apache-openmeetings.git'
+
+"""
 }
