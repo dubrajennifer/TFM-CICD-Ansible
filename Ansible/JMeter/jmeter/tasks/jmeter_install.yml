@@ -1,0 +1,26 @@
+---
+- name: Download Apache JMeter tarball
+  get_url:
+    url: "{{ jmeter_url }}"
+    dest: "{{ playbook_dir }}/roles/jmeter/files/{{ jmeter_package }}.tgz"
+
+- name: Extract JMeter Archive
+  become: yes
+  unarchive:
+    src: "{{ playbook_dir }}/roles/jmeter/files/{{ jmeter_package }}.tgz"
+    dest: /opt
+    remote_src: yes
+    creates: /opt/{{ jmeter_package }}
+
+- name: Set JMeter Environment Variables
+  become: yes
+  lineinfile:
+    dest: /etc/profile.d/jmeter.sh
+    line: 'export PATH=$PATH:/opt/{{ jmeter_package }}/bin'
+    create: yes
+
+- name: Load New Environment Variables
+  become: yes
+  shell: source /etc/profile.d/jmeter.sh
+  args:
+    executable: /bin/bash
