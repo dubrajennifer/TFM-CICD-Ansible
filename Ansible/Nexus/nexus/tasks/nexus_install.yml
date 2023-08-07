@@ -97,7 +97,3 @@
     state: started
     enabled: yes
     daemon_reload: yes
-
-- name: Print Nexus admin password
-  shell: cat /nexus/nexus-data/admin.password
-  register: admin_password_output
