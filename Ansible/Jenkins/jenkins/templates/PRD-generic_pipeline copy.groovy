@@ -1,22 +1,30 @@
-def FAILED_STAGE
-
 pipeline {
     agent any
 
     parameters {
         booleanParam(name: 'DEPLOY_ONLY', defaultValue: false, description: 'Only deploy')
         booleanParam(name: 'INIT_ENVIRONMENT_VARIABLES', defaultValue: false, description: 'Initialize environment variables')
+        string(name: 'NEXUS_IP', defaultValue: '54.212.45.242:8081', description: 'IP Nexus')
         string(name: 'RELEASE_TO_BUILD', defaultValue: 'master', description: 'Specify the Git release to build')
         string(name: 'STATIC_RECIPIENTS', defaultValue: 'jennifer.dubra@udc.es, software.dbr@gmail.com', description: 'Comma-separated list of static email recipients')
     }
 
     environment {
+        APP_LISTENER_ARN = 'arn:aws:elasticloadbalancing:us-west-2:307819018579:listener/app/BlueGreenALB/a037549a5d4afb7d/d7d6f724f76393b7'
+        APP_BLUE_ARN = 'arn:aws:elasticloadbalancing:us-west-2:307819018579:targetgroup/ATarget/224a2ccdbd8e0a4e'
+        APP_GREEN_ARN = 'arn:aws:elasticloadbalancing:us-west-2:307819018579:targetgroup/BTarget/178ddca1e7962c2e'
+        APP_BLUE_IP = '52.11.136.243'
+        APP_GREEN_IP = '35.89.255.163'
+        JENKINS_AWS_ID='aws-credentials-id'
+        APP_PRD_SSH_CREDENTIALS_ID='prd-appservers-credentials-id'
+        NEXUS_CREDENTIALS_ID='nexus-user-credentials-id'
         STATIC_RECIPIENTS = "${params.STATIC_RECIPIENTS}"
         GIT_REPOSITORY='https://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@github.com/dubrajennifer/TFM-CICD-Apache-openmeetings.git'
+
     }
 
     tools {
-        maven '3.9.4'
+        maven '3.9.3'
     }
     stages {
         stage('Set Environment Variables') {
@@ -27,8 +35,9 @@ pipeline {
             }
             steps {
                 script {
-                    def propertiesContent = sh(script: "printenv", returnStdout: true)
-                    writeFile file: "${workspace}/../environment_variables_${env.JOB_NAME}.properties", text: propertiesContent
+                    def propertiesContent = setEnvironmentVariables(env.APP_BLUE_ARN,env.APP_GREEN_ARN,env.APP_BLUE_IP, env.APP_BLUE_IP)
+                    // Write the environment variables to a file
+                    writeFile file: "${workspace}/../variables.properties", text: propertiesContent
                 }
             }
             post {
@@ -74,7 +83,7 @@ pipeline {
             }
             steps {
                 script {
-                    sh 'mvn install -DskipTests=true -Dsite.skip=true'
+                    sh 'mvn install -DskipTests=true -Dwicket.configuration=DEVELOPMENT -Dsite.skip=true'
 
                 }
             }
@@ -125,10 +134,10 @@ pipeline {
                             nexusArtifactUploader(
                                 nexusVersion: "nexus3",
                                 protocol: "http",
-                                nexusUrl: NEXUS_IP,
+                                nexusUrl: params.NEXUS_IP,
                                 groupId: groupId,
                                 version: version,
-                                repository: PRD_NEXUS_REPOSITORY,
+                                repository: "prd-maven-repository",
                                 credentialsId: NEXUS_CREDENTIALS_ID,
                                 artifacts: [
                                     [artifactId: "${module}", classifier: '', file: jarFilePath, type: "${packaging}"],
@@ -158,7 +167,7 @@ pipeline {
                     steps {
                         script {
                             def propertiesMap = loadPropertiesFromFile()
-                            deployToEnvironment(propertiesMap.APP_BLUE_ARN, propertiesMap.APP_GREEN_ARN, propertiesMap.APP_BLUE_IP, propertiesMap.APP_GREEN_IP)
+                            deployToEnvironment(propertiesMap.blueARN, propertiesMap.greenARN, propertiesMap.blueIP, propertiesMap.greenIP)
 
                         }
                     }
@@ -167,10 +176,11 @@ pipeline {
             post {
                 success {
                     script {
-                            if (currentBuild.result == 'SUCCESS') {
-                                def propertiesContent = setEnvironmentVariables()
-                                // Write the environment variables to a file
-                                writeFile file: "${workspace}/../environment_variables_${env.JOB_NAME}.properties", text: propertiesContent
+                        if (currentBuild.result == 'SUCCESS') {
+                            def propertiesMap = loadPropertiesFromFile()
+                            def propertiesContent = setEnvironmentVariables(propertiesMap.greenARN,propertiesMap.blueARN,propertiesMap.greenIP,propertiesMap.blueIP)
+                            // Write the environment variables to a file
+                            writeFile file: "${workspace}/../variables.properties", text: propertiesContent
                         }
                         
                         if (currentBuild.result == 'FAILURE' || currentBuild.result == 'UNSTABLE')  {
@@ -216,7 +226,6 @@ def deployToEnvironment( String blueARN, String greenARN, String blueIP, String 
                 ]
             ]) {
                 sh deploymentCmd
-                sleep time: 15, unit: 'SECONDS' // Wait for 5 seconds
             }
             
         }
@@ -273,32 +282,32 @@ def getValidationCommand(String blueARN, String greenARN, String greenIP)  {
 }
 
 def loadPropertiesFromFile() {
-    def propertiesFilePath = "${workspace}/../environment_variables_${env.JOB_NAME}.properties"
+    def propertiesFilePath = "${workspace}/../variables.properties"
+    echo "Properties file path: ${propertiesFilePath}"
     def properties = sh(script: "cat ${propertiesFilePath}", returnStdout: true).trim()
+    echo "Properties content: ${properties}"
 
     // Create a map to store the key-value pairs from properties
     def propertiesMap = [:]
 
     properties.split('\n').each { property ->
         def (key, value) = property.split('=')
+        echo "Setting ${key}=${value}"
         propertiesMap[key] = value // Store the key-value pair in the map
     }
 
     return propertiesMap
 }
 
-
-def setEnvironmentVariables() {
-    def propertiesMap = loadPropertiesFromFile()
-    def blueARNtmp = propertiesMap.APP_GREEN_ARN
-    def blueIPtmp = propertiesMap.APP_GREEN_IP
-    propertiesMap.APP_GREEN_ARN = propertiesMap.APP_BLUE_ARN
-    propertiesMap.APP_BLUE_ARN = blueARNtmp
-    propertiesMap.APP_GREEN_IP = propertiesMap.APP_BLUE_IP
-    propertiesMap.APP_BLUE_IP = blueIPtmp
-
-    def propertiesContent = propertiesMap.collect { key, value -> "${key}=${value}" }.join('\n')
-
-    return propertiesContent
+def setEnvironmentVariables( String blueARN, String greenARN, String blueIP, String greenIP) {
+    return """
+blueARN=${blueARN}
+greenARN=${greenARN}
+blueIP=${blueIP}
+greenIP=${greenIP}
+JENKINS_AWS_ID='aws-credentials-id'
+APP_PRD_SSH_CREDENTIALS_ID='prd-appservers-credentials-id'
+NEXUS_CREDENTIALS_ID='nexus-user-credentials-id'
+GIT_REPOSITORY='https://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@github.com/dubrajennifer/TFM-CICD-Apache-openmeetings.git'
+"""
 }
-

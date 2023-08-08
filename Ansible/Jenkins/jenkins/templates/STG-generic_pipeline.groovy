@@ -11,19 +11,13 @@ pipeline {
         string(name: 'STATIC_RECIPIENTS', defaultValue: 'jennifer.dubra@udc.es, software.dbr@gmail.com', description: 'Comma-separated list of static email recipients')
     }
 
-    environment {
-        APP_SERVER_IP = '52.35.46.167'
-        NEXUS_IP='54.70.113.238:8081'
-        JENKINS_AWS_ID='aws-credentials-id'
-        APP_SSH_CREDENTIALS_ID='stg-appservers-credentials-id'
-        NEXUS_CREDENTIALS_ID='nexus-user-credentials-id'        
+    environment {       
         STATIC_RECIPIENTS = "${params.STATIC_RECIPIENTS}"
-        DYNAMIC_RECIPIENTS = developers()
         GIT_REPOSITORY='https://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@github.com/dubrajennifer/TFM-CICD-Apache-openmeetings.git'
     }
 
     tools {
-        maven '3.9.3'
+        maven '3.9.4'
     }
     stages {
        stage('Checkout') {
@@ -141,9 +135,6 @@ pipeline {
                         returnStdout: true
                     ).trim().split('\n')
 
-                    // Remove the parent module from the list (if present)
-                    modules = modules.findAll { it != 'openmeetings-parent' }
-
                     modules.each { module ->
                         def pomFilePath = "${workspace}/${module}/pom.xml"
                         echo "POM file path: ${pomFilePath}"
@@ -165,7 +156,7 @@ pipeline {
                                 nexusUrl: NEXUS_IP,
                                 groupId: groupId,
                                 version: version,
-                                repository: "stg-maven-repository",
+                                repository: STG_NEXUS_REPOSITORY,
                                 credentialsId: NEXUS_CREDENTIALS_ID,
                                 artifacts: [
                                     [artifactId: "${module}", classifier: '', file: jarFilePath, type: "${packaging}"],
@@ -194,16 +185,16 @@ pipeline {
                 script {
                     withCredentials([
                         sshUserPrivateKey(
-                            credentialsId: APP_SSH_CREDENTIALS_ID,
+                            credentialsId: APP_STG_SSH_CREDENTIALS_ID,
                             keyFileVariable: 'SSH_KEY',
                             passphraseVariable: 'SSH_PASSPHRASE',
                             usernameVariable: 'SSH_USERNAME'
                         )
                     ]) {
                         sh  """
-                            ssh-keyscan -H ${APP_SERVER_IP} >> ~/.ssh/known_hosts
-                            scp -i \${SSH_KEY} -r ${workspace}/openmeetings-server/target/ ec2-user@${APP_SERVER_IP}:/home/ec2-user/openmeetings
-                            ssh -i \${SSH_KEY} ec2-user@${APP_SERVER_IP} 'sudo tar -xzf /home/ec2-user/openmeetings/target/*SNAPSHOT.tar.gz --strip-components=1 -C /home/ec2-user/openmeetings-app && sudo /home/ec2-user/openmeetings-app/bin/startup.sh'
+                            ssh-keyscan -H ${APP_STG_SERVER_IP} >> ~/.ssh/known_hosts
+                            scp -i \${SSH_KEY} -r ${workspace}/openmeetings-server/target/ ec2-user@${APP_STG_SERVER_IP}:/home/ec2-user/openmeetings
+                            ssh -i \${SSH_KEY} ec2-user@${APP_STG_SERVER_IP} 'sudo tar -xzf /home/ec2-user/openmeetings/target/*SNAPSHOT.tar.gz --strip-components=1 -C /home/ec2-user/openmeetings-app && sudo /home/ec2-user/openmeetings-app/bin/startup.sh'
                         """
                     }
                 }
