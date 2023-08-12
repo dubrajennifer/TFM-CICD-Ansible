@@ -6,4 +6,4 @@ jenkins_key: "https://pkg.jenkins.io/redhat-stable/jenkins.io-2023.key"
 jenkins_home: "/var/lib/jenkins"
 jenkins_os_user: jenkins
 jenkins_os_group: jenkins
-jenkins_service_override_dir: '/etc/systemd/system/jenkins.service.d'
+jenkins_service_override_dir: '/etc/init.d/jenkins'
