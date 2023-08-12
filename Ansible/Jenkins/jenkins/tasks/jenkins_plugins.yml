@@ -1,0 +1,21 @@
+---
+
+- name: Check if Jenkins API is available
+  wait_for:
+    port: 8080
+    delay: 5
+
+- name: Install Jenkins plugins
+  jenkins_plugin:
+    name: "{{ item }}"
+    jenkins_home: "{{ jenkins_home }}"
+    url_username: "{{ jenkins_admin_username }}"
+    url_password: "{{ jenkins_admin_password }}"
+    state: present
+    timeout: 30
+    updates_expiration: 86400
+    updates_url: "https://updates.jenkins.io"
+    url: "http://localhost:8080"
+    with_dependencies: true
+  loop: "{{ jenkins_plugins_list }}"
+  notify: restart jenkins

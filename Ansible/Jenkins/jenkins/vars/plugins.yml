@@ -1,0 +1,26 @@
+jenkins_plugins_list:
+  - cloudbees-folder
+  - antisamy-markup-formatter
+  - build-name-setter
+  - credentials-binding
+  - timestamper
+  - ws-cleanup
+  - workflow-aggregator
+  - pipeline-stage-view
+  - git
+  - git-parameter
+  - matrix-auth
+  - role-strategy
+  - email-ext
+  - authorize-project
+  - configuration-as-code
+  - pipeline-maven
+  - config-file-provider
+  - active-directory
+  - sonar
+  - publish-over-ssh
+  - github
+  - nexus-artifact-uploader
+  - conditional-buildstep
+  - ec2
+  - pipeline-aws

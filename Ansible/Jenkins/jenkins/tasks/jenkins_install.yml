@@ -28,7 +28,7 @@
       
       
 - name: Get init password Jenkins
-  shell: cat /var/lib/jenkins/secrets/initialAdminPassword
+  shell: "cat {{ jenkins_home }}/secrets/initialAdminPassword"
   changed_when: false
   register: result
  
@@ -51,16 +51,25 @@
     create: yes
      
 - name: Create .m2/repository
-  shell: sudo mkdir -p /var/lib/jenkins/.m2/repository/
+  shell: "sudo mkdir -p {{ jenkins_home }}/.m2/repository/"
      
 - name: Change permissions .m2/repository
-  shell: sudo chmod -R 777 /var/lib/jenkins/.m2/repository/
+  shell: "sudo chmod -R 777 {{ jenkins_home }}/.m2/repository/"
      
 - name: Create directory .shh
-  shell: sudo mkdir -p  /var/lib/jenkins/.ssh/
+  shell: "sudo mkdir -p  {{ jenkins_home }}/.ssh/"
 
 - name: Create file known_hosts
-  shell: sudo touch /var/lib/jenkins/.ssh/known_hosts
+  shell: "sudo touch {{ jenkins_home }}/.ssh/known_hosts"
 
 - name: Change permissions known_hosts
-  shell: sudo chmod -R 777 /var/lib/jenkins/.ssh/known_hosts
+  shell: "sudo chmod -R 777 {{ jenkins_home }}/.ssh/known_hosts"
+
+- name: Set default user
+  template:
+    src: "templates/basic-security.groovy.j2"
+    dest: "{{ jenkins_home }}/init.groovy.d/basic-security.groovy"
+    owner: "{{ jenkins_os_user }}"
+    group: "{{ jenkins_os_group }}"
+    mode: 0755
+
