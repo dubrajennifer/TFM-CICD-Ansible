@@ -6,8 +6,8 @@
   
 
   vars_files:
-    - vars/main.yml
-    - vars/plugins.yml
+    - jenkins/vars/main.yml
+    - jenkins/vars/plugins.yml
 
   vars_prompt:
     - name: jenkins_admin_username
@@ -20,7 +20,7 @@
   tasks:
 
     - name: Install Jenkins
-      import_tasks: tasks/main.yml
+      import_tasks: jenkins/tasks/main.yml
 
   handlers:
-    - import_tasks: handlers/main.yml
+    - import_tasks: jenkins/handlers/main.yml
