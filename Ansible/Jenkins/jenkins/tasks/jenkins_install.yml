@@ -65,6 +65,11 @@
 - name: Change permissions known_hosts
   shell: "sudo chmod -R 777 {{ jenkins_home }}/.ssh/known_hosts"
 
+- name: Create service override directory
+  file:
+    path: "{{ jenkins_service_override_dir }}"
+    state: directory
+    
 - name: Upload service override
   template:
     src: "../templates/override.conf.j2"
