@@ -1,5 +1,5 @@
 #Restart jenkins
 - name: Restart Jenkins
-      systemd:
-        name: jenkins
-        state: restarted
+  systemd:
+    name: jenkins
+    state: restarted
