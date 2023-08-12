@@ -1,10 +1,22 @@
 ---
 # tasks file for  install the jenkins
 
+- name: Create systemd override directory if not exists
+  file:
+    path: /etc/systemd/system/jenkins.service.d
+    state: directory
+    mode: '0755'
+
+- name: Copy modified jenkins.repo to override directory
+  copy:
+    src: ../templates/jenkins.repo
+    dest: /etc/yum.repos.d/jenkins.repo
+    mode: '0644'
+
 - name: Download jenkins.repo
   get_url:
       url: "{{ jenkins_Repo }}"
-      dest: /etc/yum.repos.d/jenkins.repo
+      dest:
 
 - name: Import Jenkins Key
   rpm_key:
@@ -15,16 +27,6 @@
   yum:
      name: jenkins
      state: present
-
-- name: Create service override directory
-  file:
-    path: "{{ jenkins_service_override_dir }}"
-    state: directory
-
-- name: Upload service override
-  template:
-    src: "../templates/override.conf.j2"
-    dest: "{{ jenkins_service_override_dir }}/override.conf"
 
 - name: Reload systemd daemon
   systemd:

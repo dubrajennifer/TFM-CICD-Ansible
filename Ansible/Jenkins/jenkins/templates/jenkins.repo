@@ -1,0 +1,8 @@
+[jenkins]
+name=Jenkins
+baseurl=https://pkg.jenkins.io/redhat-stable
+gpgcheck=1
+enabled=1
+
+[Service]
+Environment="JAVA_OPTS=-Djenkins.install.runSetupWizard=false"
