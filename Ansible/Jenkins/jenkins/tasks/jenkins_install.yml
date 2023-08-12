@@ -81,3 +81,12 @@
     group: "{{ jenkins_os_group }}"
     mode: 0755
 
+- name: Run Jenkins Configuration Script
+  shell: |
+    export JENKINS_ADMIN_USERNAME="{{ jenkins_admin_username }}"
+    export JENKINS_ADMIN_PASSWORD="{{ jenkins_admin_password }}"
+    groovy ../templates/basic-security.groovy.j2
+  args:
+    executable: /bin/bash
+
+
