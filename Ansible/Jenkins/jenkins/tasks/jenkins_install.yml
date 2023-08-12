@@ -65,11 +65,18 @@
 - name: Change permissions known_hosts
   shell: "sudo chmod -R 777 {{ jenkins_home }}/.ssh/known_hosts"
 
+- name: Change ownership to jenkins
+  file:
+    path: /etc/init.d/jenkins
+    owner: "{{ jenkins_os_user }}"
+    group: "{{ jenkins_os_group }}"
+    mode: '0755'
+
 - name: Create service override directory
   file:
     path: "{{ jenkins_service_override_dir }}"
     state: directory
-    
+
 - name: Upload service override
   template:
     src: "../templates/override.conf.j2"
