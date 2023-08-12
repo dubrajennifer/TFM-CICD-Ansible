@@ -16,6 +16,36 @@
      name: jenkins
      state: present
 
+- name: Create service override directory
+  file:
+    path: "{{ jenkins_service_override_dir }}"
+    state: directory
+
+- name: Upload service override
+  template:
+    src: "../templates/override.conf.j2"
+    dest: "{{ jenkins_service_override_dir }}/override.conf"
+
+- name: Reload systemd daemon
+  systemd:
+    daemon_reload: yes
+
+- name: Create custom init scripts directory.
+  file:
+    path: "{{ jenkins_home }}/init.groovy.d"
+    state: directory
+    owner: "{{ jenkins_os_user }}"
+    group: "{{ jenkins_os_group }}"
+    mode: 0775
+
+- name: Set default user
+  template:
+    src: "../templates/basic-security.groovy.j2"
+    dest: "{{ jenkins_home }}/init.groovy.d/basic-security.groovy"
+    owner: "{{ jenkins_os_user }}"
+    group: "{{ jenkins_os_group }}"
+    mode: 0755
+
 - name: Start & Enable Jenkins
   systemd:
       name: jenkins
@@ -65,42 +95,6 @@
 - name: Change permissions known_hosts
   shell: "sudo chmod -R 777 {{ jenkins_home }}/.ssh/known_hosts"
 
-- name: Change ownership to jenkins
-  file:
-    path: /etc/init.d/jenkins
-    owner: "{{ jenkins_os_user }}"
-    group: "{{ jenkins_os_group }}"
-    mode: '0755'
-
-- name: Create service override directory
-  file:
-    path: "{{ jenkins_service_override_dir }}"
-    state: directory
-
-- name: Upload service override
-  template:
-    src: "../templates/override.conf.j2"
-    dest: "{{ jenkins_service_override_dir }}/override.conf"
-
-- name: Reload systemd daemon
-  systemd:
-    daemon_reload: yes
-
-- name: Create custom init scripts directory.
-  file:
-    path: "{{ jenkins_home }}/init.groovy.d"
-    state: directory
-    owner: "{{ jenkins_os_user }}"
-    group: "{{ jenkins_os_group }}"
-    mode: 0775
-
-- name: Set default user
-  template:
-    src: "../templates/basic-security.groovy.j2"
-    dest: "{{ jenkins_home }}/init.groovy.d/basic-security.groovy"
-    owner: "{{ jenkins_os_user }}"
-    group: "{{ jenkins_os_group }}"
-    mode: 0755
 
 
 
