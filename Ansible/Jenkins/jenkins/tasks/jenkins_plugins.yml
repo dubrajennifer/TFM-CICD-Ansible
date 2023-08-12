@@ -18,4 +18,4 @@
     url: "http://localhost:8080"
     with_dependencies: true
   loop: "{{ jenkins_plugins_list }}"
-  notify: restart jenkins
+  notify: Restart jenkins
