@@ -4,3 +4,4 @@
  - include: maven_install.yml
  - include: docker_install.yml
  - include: jenkins_install.yml
+ - include: jenkins_plugins.yml

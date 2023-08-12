@@ -4,6 +4,23 @@
   become: true
   gather_facts: yes
   
-  roles:
-    - jenkins
-    - jenkins_config
+
+  vars_files:
+    - vars/main.yml
+    - vars/plugins.yml
+
+  vars_prompt:
+    - name: jenkins_admin_username
+      prompt: Jenkins temporary admin user
+      private: no
+    - name: jenkins_admin_password
+      prompt: Jenkins temporary admin password
+      private: yes
+
+  tasks:
+
+    - name: Install Jenkins
+      import_tasks: tasks/main.yml
+
+  handlers:
+    - import_tasks: handlers/main.yml
