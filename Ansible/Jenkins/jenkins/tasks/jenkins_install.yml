@@ -64,7 +64,16 @@
 
 - name: Change permissions known_hosts
   shell: "sudo chmod -R 777 {{ jenkins_home }}/.ssh/known_hosts"
-  
+
+- name: Upload service override
+  template:
+    src: "../templates/override.conf.j2"
+    dest: "{{ jenkins_service_override_dir }}/override.conf"
+
+- name: Reload systemd daemon
+  systemd:
+    daemon_reload: yes
+
 - name: Create custom init scripts directory.
   file:
     path: "{{ jenkins_home }}/init.groovy.d"
@@ -80,4 +89,8 @@
     owner: "{{ jenkins_os_user }}"
     group: "{{ jenkins_os_group }}"
     mode: 0755
+
+
+
+
 
