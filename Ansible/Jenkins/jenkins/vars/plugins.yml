@@ -13,8 +13,6 @@ jenkins_plugins_list:
   - role-strategy
   - email-ext
   - authorize-project
-  - configuration-as-code
-  - pipeline-maven
   - config-file-provider
   - active-directory
   - sonar
@@ -24,3 +22,4 @@ jenkins_plugins_list:
   - conditional-buildstep
   - ec2
   - pipeline-aws
+  - envinject
