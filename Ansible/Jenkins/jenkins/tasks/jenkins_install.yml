@@ -64,10 +64,18 @@
 
 - name: Change permissions known_hosts
   shell: "sudo chmod -R 777 {{ jenkins_home }}/.ssh/known_hosts"
+  
+- name: Create custom init scripts directory.
+  file:
+    path: "{{ jenkins_home }}/init.groovy.d"
+    state: directory
+    owner: "{{ jenkins_os_user }}"
+    group: "{{ jenkins_os_group }}"
+    mode: 0775
 
 - name: Set default user
   template:
-    src: "templates/basic-security.groovy.j2"
+    src: "../templates/basic-security.groovy.j2"
     dest: "{{ jenkins_home }}/init.groovy.d/basic-security.groovy"
     owner: "{{ jenkins_os_user }}"
     group: "{{ jenkins_os_group }}"
