@@ -1,28 +1,29 @@
 import com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl
-import com.cloudbees.jenkins.plugins.sshcredentials.impl.BasicSSHUserPrivateKey
+import com.cloudbees.plugins.credentials.CredentialsScope
 import hudson.util.Secret
-import groovy.yaml.YamlSlurper
 
-def credsDomain = com.cloudbees.plugins.credentials.domains.Domain.global()
+def domain = com.cloudbees.plugins.credentials.domains.Domain.global()
 def credsStore = Jenkins.instance.getExtensionList('com.cloudbees.plugins.credentials.SystemCredentialsProvider')[0].getStore()
 
-def credentialsFile = new File('../vars/credentials.yml')  // Replace with actual path
-def credentialsData = new YamlSlurper().parse(credentialsFile.text)
+def credentials = [
+    [id: "sonar-user-credentials-idn", username: "admin", password: "sonar"],
+    [id: "nexus-user-credentials-id", username: "admin", password: "nexus"]
+]
 
-for (cred in credentialsData.usernamePasswordCredentials) {
+for (cred in credentials) {
     def username = cred.username
     def password = Secret.fromString(cred.password)
-    
-    def usernamePasswordCredential = new UsernamePasswordCredentialsImpl(
-        com.cloudbees.plugins.credentials.CredentialsScope.GLOBAL,
+
+    def credImpl = new UsernamePasswordCredentialsImpl(
+        CredentialsScope.GLOBAL,
         cred.id,
         cred.id,
         "Username/Password credentials",
         username,
         password
     )
-    
-    credsStore.addCredentials(credsDomain, usernamePasswordCredential)
+
+    credsStore.addCredentials(domain, credImpl)
 }
 
 println "Credentials added successfully"

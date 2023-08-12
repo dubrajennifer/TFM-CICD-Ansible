@@ -19,6 +19,7 @@ jenkins_plugins_list:
   - publish-over-ssh
   - github
   - nexus-artifact-uploader
+  - configuration-as-code
   - conditional-buildstep
   - ec2
   - pipeline-aws
