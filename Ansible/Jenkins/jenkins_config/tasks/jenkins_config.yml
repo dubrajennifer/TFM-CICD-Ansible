@@ -1,0 +1,66 @@
+---
+# tasks file for  install the jenkins
+
+- name: Download jenkins.repo
+  get_url:
+      url: "{{ jenkins_Repo }}"
+      dest: /etc/yum.repos.d/jenkins.repo
+
+- name: Import Jenkins Key
+  rpm_key:
+      state: present
+      key: "{{ jenkins_key }}"
+
+- name: Install Jenkins
+  yum:
+     name: jenkins
+     state: present
+
+- name: Start & Enable Jenkins
+  systemd:
+      name: jenkins
+      state: started
+      enabled: true
+      
+- name: 
+  shell:
+      sudo usermod -a -G docker jenkins
+      
+      
+- name: Get init password Jenkins
+  shell: cat /var/lib/jenkins/secrets/initialAdminPassword
+  changed_when: false
+  register: result
+ 
+- name: Print init password Jenkins
+  debug:
+    var: result.stdout
+    
+- name: Change file ownership, group and permissions to docker.sock
+  ansible.builtin.file:
+    path: /var/run/docker.sock
+    owner: root
+    group: docker
+    mode: '0777'
+    
+- name: Validate the sudoers file before saving
+  ansible.builtin.lineinfile:
+    path: /etc/sudoers
+    state: present
+    line: 'jenkins ALL=(ALL) NOPASSWD: ALL'
+    create: yes
+     
+- name: Create .m2/repository
+  shell: sudo mkdir -p /var/lib/jenkins/.m2/repository/
+     
+- name: Change permissions .m2/repository
+  shell: sudo chmod -R 777 /var/lib/jenkins/.m2/repository/
+     
+- name: Create directory .shh
+  shell: sudo mkdir -p  /var/lib/jenkins/.ssh/
+
+- name: Create file known_hosts
+  shell: sudo touch /var/lib/jenkins/.ssh/known_hosts
+
+- name: Change permissions known_hosts
+  shell: sudo chmod -R 777 /var/lib/jenkins/.ssh/known_hosts

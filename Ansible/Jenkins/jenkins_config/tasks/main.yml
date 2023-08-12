@@ -1,0 +1,3 @@
+---
+# tasks file for Jenkins_server
+ - include: jenkins_config.yml

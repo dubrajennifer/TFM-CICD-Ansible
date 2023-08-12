@@ -1,0 +1,6 @@
+# vars file 
+maven_url: "https://dlcdn.apache.org/maven/maven-3/3.9.4/binaries/apache-maven-3.9.4-bin.tar.gz"
+maven_package: apache-maven-3.9.4
+jenkins_Repo: "https://pkg.jenkins.io/redhat-stable/jenkins.repo"
+jenkins_key: "https://pkg.jenkins.io/redhat-stable/jenkins.io-2023.key"
+
