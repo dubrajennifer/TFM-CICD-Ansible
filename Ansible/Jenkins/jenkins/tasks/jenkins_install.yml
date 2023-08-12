@@ -1,36 +1,31 @@
 ---
 # tasks file for  install the jenkins
-
 - name: Create systemd override directory if not exists
   file:
-    path: /etc/systemd/system/jenkins.service.d
+    path: /usr/lib/systemd/system/jenkins.service.d
     state: directory
     mode: '0755'
 
 - name: Copy modified jenkins.repo to override directory
   copy:
     src: ../templates/jenkins.repo
-    dest: /etc/yum.repos.d/jenkins.repo
+    dest: /usr/lib/systemd/system/jenkins.service.d/jenkins.repo
     mode: '0644'
 
 - name: Download jenkins.repo
   get_url:
-      url: "{{ jenkins_Repo }}"
-      dest:
+    url: "{{ jenkins_Repo }}"
+    dest: /etc/yum.repos.d/jenkins.repo
 
 - name: Import Jenkins Key
   rpm_key:
-      state: present
-      key: "{{ jenkins_key }}"
+    state: present
+    key: "{{ jenkins_key }}"
 
 - name: Install Jenkins
   yum:
-     name: jenkins
-     state: present
-
-- name: Reload systemd daemon
-  systemd:
-    daemon_reload: yes
+    name: jenkins
+    state: present
 
 - name: Create custom init scripts directory.
   file:
@@ -50,9 +45,9 @@
 
 - name: Start & Enable Jenkins
   systemd:
-      name: jenkins
-      state: started
-      enabled: true
+    name: jenkins
+    state: started
+    enabled: true
       
 - name: 
   shell:
