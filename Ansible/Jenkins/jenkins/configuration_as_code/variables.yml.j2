@@ -1,17 +1,18 @@
-jenkins:
-  systemMessage: "Welcome to our Jenkins instance!"
+groovy: >
+  - script: >
+    import jenkins.model.Jenkins
+    import hudson.slaves.EnvironmentVariablesNodeProperty
+    import groovy.yaml.YamlSlurper
 
-unclassified:
-  globalNodeProperties:
-    - envVarsNodeProperty:
-        envVars:
-          - key: "NEXUS_CREDENTIALS_ID"
-            value: "nexus-user-credentials-id"
-          - key: "STG_NEXUS_REPOSITORY"
-            value: "stg-maven-repository"
-          - key: "PRD_NEXUS_REPOSITORY"
-            value: "prd-maven-repository"
-          - key: "APP_STG_SSH_CREDENTIALS_ID"
-            value: "stg-appservers-credentials-id"
-          - key: "APP_PRD_SSH_CREDENTIALS_ID"
-            value: "prd-appservers-credentials-id"
+    def envVarsFile = new File('../templates/pipeline-variables.yml') 
+    def envVarsMap = new YamlSlurper().parse(envVarsFile.text)
+
+    def nodeProperty = new EnvironmentVariablesNodeProperty()
+    def envVarsNode = nodeProperty.getEnvVars()
+    envVarsMap.each { key, value ->
+        envVarsNode.put(key, value)
+    }
+
+    def existingProperties = Jenkins.instance.getGlobalNodeProperties()
+    existingProperties.add(nodeProperty)
+    Jenkins.instance.save()

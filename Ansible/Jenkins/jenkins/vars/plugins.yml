@@ -24,3 +24,4 @@ jenkins_plugins_list:
   - ec2
   - pipeline-aws
   - envinject
+  - configuration-as-code-groovy

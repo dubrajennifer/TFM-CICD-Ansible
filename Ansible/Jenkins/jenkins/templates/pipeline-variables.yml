@@ -1,0 +1,5 @@
+NEXUS_CREDENTIALS_ID: "nexus-user-credentials-id"
+APP_STG_SSH_CREDENTIALS_ID: "stg-appservers-credentials-id"
+APP_PRD_SSH_CREDENTIALS_ID: "prd-appservers-credentials-id"
+STG_NEXUS_REPOSITORY: "stg-maven-repository"
+PRD_NEXUS_REPOSITORY: "prd-maven-repository"
