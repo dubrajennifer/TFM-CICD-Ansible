@@ -1,0 +1,17 @@
+jenkins:
+  systemMessage: "Welcome to our Jenkins instance!"
+
+unclassified:
+  globalNodeProperties:
+    - envVarsNodeProperty:
+        envVars:
+          - key: "NEXUS_CREDENTIALS_ID"
+            value: "nexus-user-credentials-id"
+          - key: "STG_NEXUS_REPOSITORY"
+            value: "stg-maven-repository"
+          - key: "PRD_NEXUS_REPOSITORY"
+            value: "prd-maven-repository"
+          - key: "APP_STG_SSH_CREDENTIALS_ID"
+            value: "stg-appservers-credentials-id"
+          - key: "APP_PRD_SSH_CREDENTIALS_ID"
+            value: "prd-appservers-credentials-id"
