@@ -10,25 +10,9 @@
     src: /tmp/variables.groovy
   register: script_content
 
-- name: Get Jenkins Crumb
-  uri:
-    url: http://localhost:8080/crumbIssuer/api/json
-    method: GET
-    user: "{{ jenkins_admin_username }}"
-    password: "{{ jenkins_admin_password }}"
-  register: crumb_response
-
-- set_fact:
-    jenkins_crumb: "{{ crumb_response.json.crumb }}"
-
-- name: Execute Groovy Script
-  uri:
-    url: http://localhost:8080/scriptText
-    method: POST
-    user: "{{ jenkins_admin_username }}"
-    password: "{{ jenkins_admin_password }}"
-    body: "{{ script_content.content | b64decode }}"
-    body_format: raw
-    headers:
-      Jenkins-Crumb: "{{ jenkins_crumb }}"
-    status_code: 200
+- name: Install Jenkins Global Environment Variables
+  jenkins_script:
+    url_username: "{{ jenkins_admin_username }}"
+    url_password: "{{ jenkins_admin_password }}"
+    url: "http://localhost:8080"
+    script: "{{ lookup('file', '/tmp/variables.groovy') }}"
