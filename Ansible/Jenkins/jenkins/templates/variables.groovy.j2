@@ -4,7 +4,9 @@ import hudson.slaves.EnvironmentVariablesNodeProperty
 
 def envVars = [
   {% for variable in envVariables %}
-    "{{ variable.key }}": "{{ variable.value }}"{% if not loop.last %},{% endif %}
+    "{{ variable.key }}": "{{ variable.value }}"{% if not loop.last %},
+    {% endif %}
+
   {% endfor %}
 ]
 
