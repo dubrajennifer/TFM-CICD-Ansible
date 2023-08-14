@@ -1,6 +1,6 @@
 - name: Read STG pipeline script from file
   slurp:
-    src: ../templates/STG-generic_pipeline.groovy
+    src: "../templates/STG-generic_pipeline.groovy"
   register: pipeline_stg_script
 
 - name: Create STG Jenkins job
@@ -17,7 +17,7 @@
 
 - name: Read PRD pipeline script from file
   slurp:
-    src: ../templates/PRD-generic_pipeline.groovy
+    src: ""../templates/PRD-generic_pipeline.groovy"
   register: pipeline_prd_script
 
 - name: Create PRD Jenkins job
