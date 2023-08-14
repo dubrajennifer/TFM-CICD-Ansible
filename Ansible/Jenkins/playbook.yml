@@ -9,6 +9,7 @@
     - jenkins/vars/main.yml
     - jenkins/vars/plugins.yml
     - jenkins/vars/credentials.yml
+    - jenkins/vars/environment_variables.yml
 
   vars_prompt:
     - name: jenkins_admin_username
