@@ -5,9 +5,17 @@
     src: ../templates/variables.groovy.j2
     dest: /tmp/variables.groovy
 
+- name: Read Generated Script
+  slurp:
+    src: /tmp/variables.groovy
+  register: script_content
+
 - name: Execute Groovy Script
-  jenkins_script:
-    url: "http://localhost:8080"
+  uri:
+    url: http://localhost:8080/scriptText
+    method: POST
     user: "{{ jenkins_admin_username }}"
     password: "{{ jenkins_admin_password }}"
-    script_file: /tmp/variables.groovy
+    body: "{{ script_content.content | b64decode }}"
+    body_format: raw
+    status_code: 200
