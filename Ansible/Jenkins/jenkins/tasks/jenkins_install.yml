@@ -42,7 +42,7 @@
     owner: "{{ jenkins_os_user }}"
     group: "{{ jenkins_os_group }}"
     mode: 0755
-
+    
 - name: Create configuration as code directory
   file:
     path: "{{ jenkins_home }}/casc_configs"

@@ -5,4 +5,5 @@
  - include: docker_install.yml
  - include: jenkins_install.yml
  - include: jenkins_plugins.yml
+ - include: jenkins_variables.yml
  - include: jenkins_credentials.yml

@@ -1,0 +1,13 @@
+---
+
+- name: Render Groovy Template
+  template:
+    src: ../templates/variables.groovy.j2
+    dest: /tmp/variables.groovy
+
+- name: Execute Groovy Script
+  jenkins_script:
+    url: "http://localhost:8080"
+    user: "{{ jenkins_admin_username }}"
+    password: "{{ jenkins_admin_password }}"
+    script_file: /tmp/generated_script.groovy
