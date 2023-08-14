@@ -12,7 +12,7 @@
 
 - name: Install Jenkins Global Environment Variables
   jenkins_script:
-    url_username: "{{ jenkins_admin_username }}"
-    url_password: "{{ jenkins_admin_password }}"
+    username: "{{ jenkins_admin_username }}"
+    password: "{{ jenkins_admin_password }}"
     url: "http://localhost:8080"
     script: "{{ lookup('file', '/tmp/variables.groovy') }}"
