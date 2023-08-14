@@ -1,0 +1,33 @@
+- name: Read STG pipeline script from file
+  slurp:
+    src: ../templates/STG-generic_pipeline.groovy
+  register: pipeline_stg_script
+
+- name: Create STG Jenkins job
+  jenkins_script:
+    user: "{{ jenkins_admin_username }}"
+    password: "{{ jenkins_admin_password }}"
+    url: "http://localhost:8080"
+    script: |
+      def pipelineScript = new String('{{ pipeline_stg_script.content | b64decode | replace("\n", "\\n") }}', 'UTF-8')
+      hudson.model.Job job = Jenkins.instance.createProject(hudson.model.FreeStyleProject, 'PRD-App')
+      job.updateNextBuildNumber(1)
+      job.definition = new org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition(pipelineScript, true)
+    sandbox: false  
+
+- name: Read PRD pipeline script from file
+  slurp:
+    src: ../templates/PRD-generic_pipeline.groovy
+  register: pipeline_prd_script
+
+- name: Create PRD Jenkins job
+  jenkins_script:
+    user: "{{ jenkins_admin_username }}"
+    password: "{{ jenkins_admin_password }}"
+    url: "http://localhost:8080"
+    script: |
+      def pipelineScript = new String('{{ pipeline_prd_script.content | b64decode | replace("\n", "\\n") }}', 'UTF-8')
+      hudson.model.Job job = Jenkins.instance.createProject(hudson.model.FreeStyleProject, 'PRD-App')
+      job.updateNextBuildNumber(1)
+      job.definition = new org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition(pipelineScript, true)
+    sandbox: false  
