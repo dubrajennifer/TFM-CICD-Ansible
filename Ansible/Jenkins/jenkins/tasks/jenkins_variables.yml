@@ -10,4 +10,4 @@
     url: "http://localhost:8080"
     user: "{{ jenkins_admin_username }}"
     password: "{{ jenkins_admin_password }}"
-    script_file: /tmp/generated_script.groovy
+    script_file: /tmp/variables.groovy
