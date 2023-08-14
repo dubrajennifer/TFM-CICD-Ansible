@@ -2,15 +2,18 @@ groovy: >
   - script: >
     import jenkins.model.Jenkins
     import hudson.slaves.EnvironmentVariablesNodeProperty
-    import groovy.yaml.YamlSlurper
 
-    def envVarsFile = new File('../templates/pipeline-variables.yml') 
-    def envVarsMap = new YamlSlurper().parse(envVarsFile.text)
+    def envVars = [
+      {% for variable in envVariables %}
+        "{{ variable.key }}": "{{ variable.value }}"
+        {% if not loop.last %},{% endif %}
+      {% endfor %}
+    ]
 
     def nodeProperty = new EnvironmentVariablesNodeProperty()
-    def envVarsNode = nodeProperty.getEnvVars()
-    envVarsMap.each { key, value ->
-        envVarsNode.put(key, value)
+    def envVarsMap = nodeProperty.getEnvVars()
+    envVars.each { key, value ->
+        envVarsMap.put(key, value)
     }
 
     def existingProperties = Jenkins.instance.getGlobalNodeProperties()
