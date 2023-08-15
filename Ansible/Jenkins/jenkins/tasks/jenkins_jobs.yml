@@ -1,14 +1,14 @@
-- name: Copy pipeline template to temporary directory
+- name: Copy STG pipeline template to temporary directory
   copy:
     src: "../templates/STG-generic_pipeline.groovy"
     dest: "/tmp/STG-generic_pipeline.groovy"
   delegate_to: localhost
   run_once: true
 
-- name: Copy pipeline template to temporary directory
+- name: Copy PRD pipeline template to temporary directory
   copy:
-    src: "../templates/STG-generic_pipeline.groovy"
-    dest: "/tmp/STG-generic_pipeline.groovy"
+    src: "../templates/PRD-generic_pipeline.groovy"
+    dest: "/tmp/PRD-generic_pipeline.groovy"
 
 - name: Read STG pipeline script from file
   slurp:
