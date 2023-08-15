@@ -6,3 +6,24 @@
     chdir: sonarqube/templates
   become: yes
   become_user: root
+
+# tasks/main.yml
+---
+- name: Create SonarQube Project
+  uri:
+    url: "http://localhost:9000/api/projects/create"
+    method: POST
+    url_username: admin
+    url_password: admin
+    body_format: json
+    body: |
+      {
+        "name": "{{ sonar_project_name }}",
+        "project": "{{ sonar_project_key }}",
+        "language": "{{ sonar_project_language }}",
+        "sources": "{{ sonar_project_sources }}",
+        "binaries": "{{ sonar_project_binaries }}"
+      }
+    status_code: 200
+  delegate_to: localhost
+

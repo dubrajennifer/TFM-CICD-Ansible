@@ -1,1 +1,6 @@
 # vars/main.yml
+sonar_project_name: STG-App
+sonar_project_key: STG-App
+sonar_project_language: java
+sonar_project_sources: src/main/java
+sonar_project_binaries: target/classes
