@@ -24,20 +24,27 @@
     src: "../templates/PRD-generic_pipeline.groovy"
     dest: "/tmp/PRD-generic_pipeline.groovy"
 
-- name: Create STG Pipeline job
-  jenkins_job:
+- name: Read DSL script
+  slurp:
+    src: "/tmp/PRD-generic_pipeline.groovy"
+  register: dsl_script
+
+- name: Convert DSL script to string
+  set_fact:
+    dsl_script_string: "{{ dsl_script.content | b64decode | string }}"
+
+- name: Create Jenkins job using REST API
+  uri:
+    method: POST
     name: STG-App
     user: "{{ jenkins_admin_username }}"
     password: "{{ jenkins_admin_password }}"
-    url: "http://localhost:8080"
-    config: "{{ lookup('file', '/tmp/STG-pipeline_job.xml') }}"
+    url: "http://localhost:8080/createItem?name=STG-pipeline"
+    body: "{{ dsl_script_string }}"
+    body_format: text/plain
+    return_content: yes
+  register: job_creation_result
 
-
-
-- name: Create PRD Pipeline job
-  jenkins_job:
-    name: PRD-App
-    user: "{{ jenkins_admin_username }}"
-    password: "{{ jenkins_admin_password }}"
-    url: "http://localhost:8080"
-    config: "{{ lookup('file', '/tmp/PRD-pipeline_job.xml') }}"
+- name: Print job creation result
+  debug:
+    var: job_creation_result.content
