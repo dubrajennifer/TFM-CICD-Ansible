@@ -1,11 +1,3 @@
-- name: Install Jenkins Job DSL plugin
-  jenkins_plugin:
-    user: "{{ jenkins_admin_username }}"
-    password: "{{ jenkins_admin_password }}"
-    name: job-dsl
-    state: present
-  tags: plugins
-
 - name: Copy STG pipeline template to temporary directory
   copy:
     src: "../templates/STG-generic_pipeline.groovy"
