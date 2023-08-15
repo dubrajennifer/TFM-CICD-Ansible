@@ -10,11 +10,6 @@
     src: "/tmp/STG-generic_pipeline.groovy"
   register: groovy_content
 
-- debug:
-    var: groovy_content.content
-- debug:
-    var: groovy_content
-
 - name: Convert Groovy to XML
   set_fact:
     job_xml: |
@@ -46,10 +41,11 @@
 
 - name: Create Jenkins job using CLI
   command: >
-    {{ jenkins_cli_command }}
+    java -jar /var/lib/jenkins/jenkins-cli.jar
     -s http://localhost:8080/
-    -auth {{ jenkins_admin_username }}:{{ jenkins_admin_username }}
-    create-job STG-Pipeline-Job
+    -auth jenkins:jenkins
+    create-job STG-Pipeline-Job-2
   args:
-    stdin: "{{ lookup('file', '/tmp/STG-pipeline_job.xml') }}"
+    stdin: "{{ groovy_content }}"
+
 
