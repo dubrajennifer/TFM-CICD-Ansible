@@ -33,14 +33,24 @@
   set_fact:
     dsl_script_string: "{{ dsl_script.content | b64decode | string }}"
 
+- name: Get Jenkins crumb
+  uri:
+    url: "http://localhost:8080/crumbIssuer/api/json"
+    method: GET
+    url_username: "{{ jenkins_admin_username }}"
+    url_password: "{{ jenkins_admin_password }}"
+  register: crumb_result
+
 - name: Create Jenkins job using REST API
   uri:
     method: POST
     url_username: "{{ jenkins_admin_username }}"
     url_password: "{{ jenkins_admin_password }}"
     url: "http://localhost:8080/createItem?name=STG-pipeline"
+    headers:
+      - "Jenkins-Crumb: {{ crumb_result.json.crumb }}"
     body: "{{ dsl_script_string }}"
-    body_format: text/plain
+    body_format: json
     return_content: yes
   register: job_creation_result
 
