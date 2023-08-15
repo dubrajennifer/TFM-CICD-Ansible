@@ -36,9 +36,8 @@
 - name: Create Jenkins job using REST API
   uri:
     method: POST
-    name: STG-App
-    user: "{{ jenkins_admin_username }}"
-    password: "{{ jenkins_admin_password }}"
+    url_username: "{{ jenkins_admin_username }}"
+    url_password: "{{ jenkins_admin_password }}"
     url: "http://localhost:8080/createItem?name=STG-pipeline"
     body: "{{ dsl_script_string }}"
     body_format: text/plain
