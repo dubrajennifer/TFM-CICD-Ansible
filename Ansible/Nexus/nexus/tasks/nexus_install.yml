@@ -117,7 +117,7 @@
 
 - name: Set Initial Password for Nexus
   uri:
-    url: "http://localhost:8081/service/rest/beta/security/users/admin/change-password"
+    url: "http://localhost:8081/v1/security/users/{userId}/change-password"
     method: POST
     url_username: admin
     url_password: "{{ initial_admin_password }}"
