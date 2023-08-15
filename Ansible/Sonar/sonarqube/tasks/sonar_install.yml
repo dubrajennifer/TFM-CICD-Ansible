@@ -23,9 +23,7 @@
       {
         "name": "{{ sonar_project_name }}",
         "project": "{{ sonar_project_key }}",
-        "language": "{{ sonar_project_language }}",
-        "sources": "{{ sonar_project_sources }}",
-        "binaries": "{{ sonar_project_binaries }}"
+        "language": "{{ sonar_project_language }}"
       }
     status_code: 200
   delegate_to: localhost
