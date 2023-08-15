@@ -10,9 +10,10 @@
     src: "/tmp/STG-generic_pipeline.groovy"
   register: groovy_content
 
-- name: Encode groovy content to Base64
-  set_fact:
-    groovy_content_encoded: "{{ groovy_content.content | b64encode }}"
+- debug:
+    var: groovy_content.content
+- debug:
+    var: groovy_content.content_encoded
 
 - name: Convert Groovy to XML
   set_fact:
@@ -24,7 +25,7 @@
         <properties/>
         <definition class="org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition" plugin="workflow-cps@2.90">
             <scriptText>
-                {{ groovy_content_encoded | indent(14) }}
+                {{ groovy_content.content_encoded | indent(14) }}
             </scriptText>
             <sandbox>false</sandbox>
         </definition>
