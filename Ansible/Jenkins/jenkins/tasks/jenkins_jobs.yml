@@ -11,6 +11,12 @@
     dest: "{{ jenkins_home }}"
     mode: '0755'  # Make the downloaded file executable
 
-- name: Configure Jenkins Job
-  command: "{{ jenkins_cli_command }} -s http://localhost:8080/ -auth {{ jenkins_admin_username }}:{{ jenkins_admin_username }} create-job {{ job_name }} < /tmp/STG-pipeline_job.xml"
-  delegate_to: localhost
+- name: Create Jenkins job using CLI
+  command: >
+    {{ jenkins_cli_command }}
+    -s http://localhost:8080/
+    -auth {{ jenkins_admin_username }}:{{ jenkins_admin_username }}
+    create-job STG-Pipeline-Job
+  args:
+    stdin: "{{ lookup('file', '/tmp/STG-pipeline_job.xml') }}"
+
