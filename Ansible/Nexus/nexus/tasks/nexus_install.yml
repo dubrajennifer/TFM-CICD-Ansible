@@ -125,6 +125,6 @@
     body_format: json
     body: |
       {
-        "password": "your-new-admin-password"
+        "password": "nexus"
       }
 
