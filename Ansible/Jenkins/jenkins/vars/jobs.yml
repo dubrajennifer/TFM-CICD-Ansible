@@ -1,0 +1,6 @@
+# jobs file 
+---
+job_name: "STG-Pipeline-Job"
+jenkins_cli_url: "http://localhost:8080/jnlpJars/jenkins-cli.jar"
+jenkins_cli_jar_path: "{{ jenkins_home }}/jenkins-cli.jar"
+jenkins_cli_command: "java -jar {{ jenkins_cli_jar_path }}"

@@ -5,55 +5,12 @@
   delegate_to: localhost
   run_once: true
 
-- name: Copy PRD pipeline job to temporary directory
-  copy:
-    src: "../templates/PRD-pipeline_job.xml"
-    dest: "/tmp/PRD-pipeline_job.xml"
+- name: Download Jenkins CLI JAR
+  get_url:
+    url: "{{ jenkins_cli_url }}"
+    dest: "{{ jenkins_home }}"
+    mode: '0755'  # Make the downloaded file executable
+
+- name: Configure Jenkins Job
+  command: "{{ jenkins_cli_command }} -s http://localhost:8080/ -auth {{ jenkins_admin_username }}:{{ jenkins_admin_username }} create-job {{ job_name }} < /tmp/STG-pipeline_job.xml"
   delegate_to: localhost
-  run_once: true
-
-- name: Copy STG pipeline template to temporary directory
-  copy:
-    src: "../templates/STG-generic_pipeline.groovy"
-    dest: "/tmp/STG-generic_pipeline.groovy"
-  delegate_to: localhost
-  run_once: true
-
-- name: Copy PRD pipeline template to temporary directory
-  copy:
-    src: "../templates/PRD-generic_pipeline.groovy"
-    dest: "/tmp/PRD-generic_pipeline.groovy"
-
-- name: Read DSL script
-  slurp:
-    src: "/tmp/PRD-generic_pipeline.groovy"
-  register: dsl_script
-
-- name: Convert DSL script to string
-  set_fact:
-    dsl_script_string: "{{ dsl_script.content | b64decode | string }}"
-
-- name: Get Jenkins crumb
-  uri:
-    url: "http://localhost:8080/crumbIssuer/api/json"
-    method: GET
-    url_username: "{{ jenkins_admin_username }}"
-    url_password: "{{ jenkins_admin_password }}"
-  register: crumb_result
-
-- name: Create Jenkins job using REST API
-  uri:
-    method: POST
-    url_username: "{{ jenkins_admin_username }}"
-    url_password: "{{ jenkins_admin_password }}"
-    url: "http://localhost:8080/createItem?name=STG-pipeline"
-    headers:
-      - "Jenkins-Crumb: {{ crumb_result.json.crumb }}"
-    body: "{{ dsl_script_string }}"
-    body_format: json
-    return_content: yes
-  register: job_creation_result
-
-- name: Print job creation result
-  debug:
-    var: job_creation_result.content
