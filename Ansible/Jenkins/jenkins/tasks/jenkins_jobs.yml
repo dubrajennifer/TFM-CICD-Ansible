@@ -1,7 +1,24 @@
+- name: Copy pipeline template to temporary directory
+  copy:
+    src: "../templates/STG-generic_pipeline.groovy"
+    dest: "/tmp/STG-generic_pipeline.groovy"
+  delegate_to: localhost
+  run_once: true
+
+- name: Copy pipeline template to temporary directory
+  copy:
+    src: "../templates/STG-generic_pipeline.groovy"
+    dest: "/tmp/STG-generic_pipeline.groovy"
+
 - name: Read STG pipeline script from file
   slurp:
-    src: "../templates/STG-generic_pipeline.groovy"
+    src: "/tmp/STG-generic_pipeline.groovy"
   register: pipeline_stg_script
+
+- name: Read PRD pipeline script from file
+  slurp:
+    src: "/tmp/PRD-generic_pipeline.groovy"
+  register: pipeline_prd_script
 
 - name: Create STG Jenkins job
   jenkins_script:
@@ -15,10 +32,6 @@
       job.definition = new org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition(pipelineScript, true)
     sandbox: false  
 
-- name: Read PRD pipeline script from file
-  slurp:
-    src: ""../templates/PRD-generic_pipeline.groovy"
-  register: pipeline_prd_script
 
 - name: Create PRD Jenkins job
   jenkins_script:
