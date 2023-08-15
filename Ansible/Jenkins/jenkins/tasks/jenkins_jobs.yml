@@ -29,7 +29,7 @@
             <sandbox>false</sandbox>
         </definition>
         <triggers/>
-     </flow-definition>
+      </flow-definition>
 
 
 - name: Write job config XML
