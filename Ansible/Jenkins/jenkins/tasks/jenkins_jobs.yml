@@ -1,6 +1,13 @@
+- name: Copy STG pipeline job to temporary directory
+  copy:
+    src: "../templates/STG-generic_pipeline.groovy"
+    dest: "/tmp/STG-generic_pipeline.groovy"
+  delegate_to: localhost
+  run_once: true
+
 - name: Read pipeline.groovy content
   slurp:
-    src: "../templates/STG-generic_pipeline.groovy"
+    src: "/tmp/STG-generic_pipeline.groovy"
   register: groovy_content
 
 - name: Convert Groovy to XML
