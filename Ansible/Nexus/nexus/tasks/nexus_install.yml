@@ -103,18 +103,13 @@
     port: 8081
     delay: 10
 
-- name: Read admin password file
-  ansible.builtin.slurp:
-    src: /nexus/nexus-data/admin.password
-  register: admin_password_file
+- name: Read admin password from file
+  shell: cat /nexus/nexus-data/admin.password
+  register: admin_password
 
-- name: Extract password from file content
+- name: Set admin password variable
   set_fact:
-    initial_admin_password: "{{ admin_password_file.content | b64decode | ansible.builtin.decode('utf-8') }}"
-
-- name: Display the extracted password
-  debug:
-    var: initial_admin_password
+    initial_admin_password: "{{ admin_password.stdout | trim }}"
 
 - name: Set Initial Password for Nexus
   uri:
