@@ -111,6 +111,10 @@
   set_fact:
     initial_admin_password: "{{ admin_password.stdout | trim }}"
 
+- name: Debug Initial Admin Password
+  debug:
+    var: initial_admin_password
+
 - name: Set Initial Password for Nexus
   uri:
     url: "http://localhost:8081/service/rest/beta/security/users/admin/change-password"
