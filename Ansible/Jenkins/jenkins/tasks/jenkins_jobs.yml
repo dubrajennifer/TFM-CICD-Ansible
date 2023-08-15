@@ -1,3 +1,17 @@
+- name: Copy STG pipeline job to temporary directory
+  copy:
+    src: "../templates/STG-pipeline_job.xml"
+    dest: "/tmp/STG-pipeline_job.xml"
+  delegate_to: localhost
+  run_once: true
+
+- name: Copy PRD pipeline job to temporary directory
+  copy:
+    src: "../templates/PRD-pipeline_job.xml"
+    dest: "/tmp/PRD-pipeline_job.xml"
+  delegate_to: localhost
+  run_once: true
+
 - name: Copy STG pipeline template to temporary directory
   copy:
     src: "../templates/STG-generic_pipeline.groovy"
@@ -16,23 +30,8 @@
     user: "{{ jenkins_admin_username }}"
     password: "{{ jenkins_admin_password }}"
     url: "http://localhost:8080"
-    config: |
-      pipelineJob('STG-App') {
-          definition {
-              cpsScm {
-                  scm {
-                      git {
-                          remote {
-                              url('https://github.com/your/repo.git')
-                          }
-                          branches('*/master') // Or the branch you want to build from
-                      }
-                  }
-              }
-              scriptPath('/tmp/STG-generic_pipeline.groovy') // Path to your Jenkinsfile in the repository
-          }
-      }
-  tags: create_jenkins_job
+    config: "{{ lookup('file', '/tmp/STG-pipeline_job.xml) }}"
+
 
 - name: Create PRD Pipeline job
   jenkins_job:
@@ -40,20 +39,4 @@
     user: "{{ jenkins_admin_username }}"
     password: "{{ jenkins_admin_password }}"
     url: "http://localhost:8080"
-    config: |
-      pipelineJob('PRD-App') {
-          definition {
-              cpsScm {
-                  scm {
-                      git {
-                          remote {
-                              url('https://github.com/your/repo.git')
-                          }
-                          branches('*/master') // Or the branch you want to build from
-                      }
-                  }
-              }
-              scriptPath('/tmp/PRD-generic_pipeline.groovy') // Path to your Jenkinsfile in the repository
-          }
-      }
-  tags: create_jenkins_job
+    config: "{{ lookup('file', '/tmp/PRD-pipeline_job.xml) }}"
