@@ -25,3 +25,4 @@ jenkins_plugins_list:
   - pipeline-aws
   - envinject
   - configuration-as-code-groovy
+  - job-dsl
