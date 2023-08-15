@@ -13,7 +13,7 @@
 - debug:
     var: groovy_content.content
 - debug:
-    var: groovy_content.content_encoded
+    var: groovy_content
 
 - name: Convert Groovy to XML
   set_fact:
@@ -25,7 +25,7 @@
         <properties/>
         <definition class="org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition" plugin="workflow-cps@2.90">
             <scriptText>
-                {{ groovy_content.content_encoded | indent(14) }}
+                {{ groovy_content.content | b64decode | indent(14) }}
             </scriptText>
             <sandbox>false</sandbox>
         </definition>
