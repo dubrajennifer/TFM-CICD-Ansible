@@ -4,22 +4,22 @@ pipeline {
     agent any
 
     parameters {
-        booleanParam(name: 'DEPLOY_ONLY', defaultValue: false, description: 'Only deploy')
-        booleanParam(name: 'INIT_ENVIRONMENT_VARIABLES', defaultValue: false, description: 'Initialize environment variables')
-        string(name: 'RELEASE_TO_BUILD', defaultValue: 'master', description: 'Specify the Git release to build')
-        string(name: 'STATIC_RECIPIENTS', defaultValue: 'jennifer.dubra@udc.es, software.dbr@gmail.com', description: 'Comma-separated list of static email recipients')
+        booleanParam(name: &apos;DEPLOY_ONLY&apos;, defaultValue: false, description: &apos;Only deploy&apos;)
+        booleanParam(name: &apos;INIT_ENVIRONMENT_VARIABLES&apos;, defaultValue: false, description: &apos;Initialize environment variables&apos;)
+        string(name: &apos;RELEASE_TO_BUILD&apos;, defaultValue: &apos;master&apos;, description: &apos;Specify the Git release to build&apos;)
+        string(name: &apos;STATIC_RECIPIENTS&apos;, defaultValue: &apos;jennifer.dubra@udc.es, software.dbr@gmail.com&apos;, description: &apos;Comma-separated list of static email recipients&apos;)
     }
 
     environment {
-        STATIC_RECIPIENTS = "${params.STATIC_RECIPIENTS}"
-        GIT_REPOSITORY='https://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@github.com/dubrajennifer/TFM-CICD-Apache-openmeetings.git'
+        STATIC_RECIPIENTS = &quot;${params.STATIC_RECIPIENTS}&quot;
+        GIT_REPOSITORY=&apos;https://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@github.com/dubrajennifer/TFM-CICD-Apache-openmeetings.git&apos;
     }
 
     tools {
-        maven '3.9.4'
+        maven &apos;3.9.4&apos;
     }
     stages {
-        stage('Set Environment Variables') {
+        stage(&apos;Set Environment Variables&apos;) {
             when {
                 expression {
                     params.INIT_ENVIRONMENT_VARIABLES == true
@@ -27,38 +27,38 @@ pipeline {
             }
             steps {
                 script {
-                    def propertiesContent = sh(script: "printenv", returnStdout: true)
-                    writeFile file: "${workspace}/../environment_variables_${env.JOB_NAME}.properties", text: propertiesContent
+                    def propertiesContent = sh(script: &quot;printenv&quot;, returnStdout: true)
+                    writeFile file: &quot;${workspace}/../environment_variables_${env.JOB_NAME}.properties&quot;, text: propertiesContent
                 }
             }
             post {
                 always {
                     script {
-                        if (currentBuild.result == 'FAILURE' || currentBuild.result == 'UNSTABLE')  {
+                        if (currentBuild.result == &apos;FAILURE&apos; || currentBuild.result == &apos;UNSTABLE&apos;)  {
                             FAILED_STAGE=env.STAGE_NAME
                         }
                     }
                 }
             }
         }
-    
-        stage('Checkout') {
+
+        stage(&apos;Checkout&apos;) {
             when {
                 expression {
                     return !params.DEPLOY_ONLY
                 }
             }
             steps {
-                script { 
+                script {
                     cleanWs()
                 }
                 // Checkout the Git repository
-               git branch: "${params.RELEASE_TO_BUILD}", url: "${GIT_REPOSITORY}"
+               git branch: &quot;${params.RELEASE_TO_BUILD}&quot;, url: &quot;${GIT_REPOSITORY}&quot;
             }
             post {
                 always {
                     script {
-                        if (currentBuild.result == 'FAILURE' || currentBuild.result == 'UNSTABLE')  {
+                        if (currentBuild.result == &apos;FAILURE&apos; || currentBuild.result == &apos;UNSTABLE&apos;)  {
                             FAILED_STAGE=env.STAGE_NAME
                         }
                     }
@@ -66,7 +66,7 @@ pipeline {
             }
         }
 
-        stage('Package') {
+        stage(&apos;Package&apos;) {
             when {
                 expression {
                     return !params.DEPLOY_ONLY
@@ -74,23 +74,23 @@ pipeline {
             }
             steps {
                 script {
-                    sh 'mvn install -DskipTests=true -Dsite.skip=true'
+                    sh &apos;mvn install -DskipTests=true -Dsite.skip=true&apos;
 
                 }
             }
             post {
                 always {
                     script {
-                        if (currentBuild.result == 'FAILURE' || currentBuild.result == 'UNSTABLE')  {
+                        if (currentBuild.result == &apos;FAILURE&apos; || currentBuild.result == &apos;UNSTABLE&apos;)  {
                             FAILED_STAGE=env.STAGE_NAME
                         }
                     }
                 }
             }
         }
-       
 
-        stage("Nexus") {
+
+        stage(&quot;Nexus&quot;) {
             when {
                 expression {
                     return !params.DEPLOY_ONLY
@@ -98,45 +98,45 @@ pipeline {
             }
             steps {
                 script {
-                    def parentPomFilePath = "${workspace}/pom.xml"
+                    def parentPomFilePath = &quot;${workspace}/pom.xml&quot;
                     def modules = sh(
-                        script: "grep '<module>' ${parentPomFilePath} | sed 's/^.*<module>\\(.*\\)<\\/module>.*\$'/'\\1'/",
+                        script: &quot;grep &apos;&lt;module&gt;&apos; ${parentPomFilePath} | sed &apos;s/^.*&lt;module&gt;\\(.*\\)&lt;\\/module&gt;.*\$&apos;/&apos;\\1&apos;/&quot;,
                         returnStdout: true
-                    ).trim().split('\n')
+                    ).trim().split(&apos;\n&apos;)
 
                     // Remove the parent module from the list (if present)
-                    modules = modules.findAll { it != 'openmeetings-parent' }
+                    modules = modules.findAll { it != &apos;openmeetings-parent&apos; }
 
-                    modules.each { module ->
-                        def pomFilePath = "${workspace}/${module}/pom.xml"
-                        echo "POM file path: ${pomFilePath}"
+                    modules.each { module -&gt;
+                        def pomFilePath = &quot;${workspace}/${module}/pom.xml&quot;
+                        echo &quot;POM file path: ${pomFilePath}&quot;
 
                         // Use sh and grep to extract the necessary details from pom.xml
-                        def groupId = sh(script: "grep -m 1 '<groupId>' ${pomFilePath} | sed 's/^.*<groupId>\\(.*\\)<\\/groupId>.*\$'/'\\1'/", returnStdout: true).trim()
-                        def artifactId = sh(script: "grep -m 1 '<artifactId>' ${pomFilePath} | sed 's/^.*<artifactId>\\(.*\\)<\\/artifactId>.*\$'/'\\1'/", returnStdout: true).trim()
-                        def version = sh(script: "grep -m 1 '<version>' ${pomFilePath} | sed 's/^.*<version>\\(.*\\)<\\/version>.*\$'/'\\1'/", returnStdout: true).trim()
-                        def packaging = sh(script: "grep -m 1 '<packaging>' ${pomFilePath} | sed 's/^.*<packaging>\\(.*\\)<\\/packaging>.*\$'/'\\1'/", returnStdout: true).trim()
+                        def groupId = sh(script: &quot;grep -m 1 &apos;&lt;groupId&gt;&apos; ${pomFilePath} | sed &apos;s/^.*&lt;groupId&gt;\\(.*\\)&lt;\\/groupId&gt;.*\$&apos;/&apos;\\1&apos;/&quot;, returnStdout: true).trim()
+                        def artifactId = sh(script: &quot;grep -m 1 &apos;&lt;artifactId&gt;&apos; ${pomFilePath} | sed &apos;s/^.*&lt;artifactId&gt;\\(.*\\)&lt;\\/artifactId&gt;.*\$&apos;/&apos;\\1&apos;/&quot;, returnStdout: true).trim()
+                        def version = sh(script: &quot;grep -m 1 &apos;&lt;version&gt;&apos; ${pomFilePath} | sed &apos;s/^.*&lt;version&gt;\\(.*\\)&lt;\\/version&gt;.*\$&apos;/&apos;\\1&apos;/&quot;, returnStdout: true).trim()
+                        def packaging = sh(script: &quot;grep -m 1 &apos;&lt;packaging&gt;&apos; ${pomFilePath} | sed &apos;s/^.*&lt;packaging&gt;\\(.*\\)&lt;\\/packaging&gt;.*\$&apos;/&apos;\\1&apos;/&quot;, returnStdout: true).trim()
 
-                        def jarFileName = "${module}-${version}.${packaging}"
-                        def jarFilePath = "${workspace}/${module}/target/${jarFileName}"
+                        def jarFileName = &quot;${module}-${version}.${packaging}&quot;
+                        def jarFilePath = &quot;${workspace}/${module}/target/${jarFileName}&quot;
 
                         if (fileExists(jarFilePath)) {
-                            echo "*** File: ${jarFileName}, group: ${groupId}, packaging: ${packaging}, version ${version}";
+                            echo &quot;*** File: ${jarFileName}, group: ${groupId}, packaging: ${packaging}, version ${version}&quot;;
                             nexusArtifactUploader(
-                                nexusVersion: "nexus3",
-                                protocol: "http",
+                                nexusVersion: &quot;nexus3&quot;,
+                                protocol: &quot;http&quot;,
                                 nexusUrl: NEXUS_IP,
                                 groupId: groupId,
                                 version: version,
                                 repository: PRD_NEXUS_REPOSITORY,
                                 credentialsId: NEXUS_CREDENTIALS_ID,
                                 artifacts: [
-                                    [artifactId: "${module}", classifier: '', file: jarFilePath, type: "${packaging}"],
-                                    [artifactId: "${module}", classifier: '', file: pomFilePath, type: "pom"]
+                                    [artifactId: &quot;${module}&quot;, classifier: &apos;&apos;, file: jarFilePath, type: &quot;${packaging}&quot;],
+                                    [artifactId: &quot;${module}&quot;, classifier: &apos;&apos;, file: pomFilePath, type: &quot;pom&quot;]
                                 ]
                             )
                         } else {
-                            echo "*** Skipping: ${jarFileName} not found in ${jarFilePath}"
+                            echo &quot;*** Skipping: ${jarFileName} not found in ${jarFilePath}&quot;
                         }
                     }
                 }
@@ -144,7 +144,7 @@ pipeline {
             post {
                 always {
                     script {
-                        if (currentBuild.result == 'FAILURE' || currentBuild.result == 'UNSTABLE')  {
+                        if (currentBuild.result == &apos;FAILURE&apos; || currentBuild.result == &apos;UNSTABLE&apos;)  {
                             FAILED_STAGE=env.STAGE_NAME
                         }
                     }
@@ -152,9 +152,9 @@ pipeline {
             }
         }
 
-        stage('Deploy') {
+        stage(&apos;Deploy&apos;) {
             parallel {
-                stage('Green') {
+                stage(&apos;Green&apos;) {
                     steps {
                         script {
                             def propertiesMap = loadPropertiesFromFile()
@@ -167,13 +167,13 @@ pipeline {
             post {
                 success {
                     script {
-                            if (currentBuild.result == 'SUCCESS') {
+                            if (currentBuild.result == &apos;SUCCESS&apos;) {
                                 def propertiesContent = setEnvironmentVariables()
                                 // Write the environment variables to a file
-                                writeFile file: "${workspace}/../environment_variables_${env.JOB_NAME}.properties", text: propertiesContent
+                                writeFile file: &quot;${workspace}/../environment_variables_${env.JOB_NAME}.properties&quot;, text: propertiesContent
                         }
-                        
-                        if (currentBuild.result == 'FAILURE' || currentBuild.result == 'UNSTABLE')  {
+
+                        if (currentBuild.result == &apos;FAILURE&apos; || currentBuild.result == &apos;UNSTABLE&apos;)  {
                             FAILED_STAGE=env.STAGE_NAME
                         }
                     }
@@ -184,10 +184,10 @@ pipeline {
     post {
         always {
             script {
-                if (currentBuild.result == 'FAILURE' || currentBuild.result == 'UNSTABLE') {
-                    emailext subject: "[JENKINS][${env.JOB_NAME}] ${currentBuild.result} at ${FAILED_STAGE}",
-                             body: "The build has failed or is unstable in stage: ${FAILED_STAGE} \nCheck console output at ${env.BUILD_URL} to view the results.",
-                             to: "${params.STATIC_RECIPIENTS}"
+                if (currentBuild.result == &apos;FAILURE&apos; || currentBuild.result == &apos;UNSTABLE&apos;) {
+                    emailext subject: &quot;[JENKINS][${env.JOB_NAME}] ${currentBuild.result} at ${FAILED_STAGE}&quot;,
+                             body: &quot;The build has failed or is unstable in stage: ${FAILED_STAGE} \nCheck console output at ${env.BUILD_URL} to view the results.&quot;,
+                             to: &quot;${params.STATIC_RECIPIENTS}&quot;
                 }
             }
         }
@@ -199,43 +199,43 @@ def deployToEnvironment( String blueARN, String greenARN, String blueIP, String 
     def deploymentCmd = getDeploymentCommand(greenIP)
     def validateCmd = getValidationCommand(blueARN,greenARN,greenIP)
 
-    stage("Deploying") {
+    stage(&quot;Deploying&quot;) {
         script {
             withCredentials([
                 sshUserPrivateKey(
                     credentialsId: APP_PRD_SSH_CREDENTIALS_ID,
-                    keyFileVariable: 'SSH_KEY',
-                    passphraseVariable: 'SSH_PASSPHRASE',
-                    usernameVariable: 'SSH_USERNAME'
+                    keyFileVariable: &apos;SSH_KEY&apos;,
+                    passphraseVariable: &apos;SSH_PASSPHRASE&apos;,
+                    usernameVariable: &apos;SSH_USERNAME&apos;
                 ),
                 [
-                    $class: 'AmazonWebServicesCredentialsBinding',
-                    accessKeyVariable: 'AWS_ACCESS_KEY',
+                    $class: &apos;AmazonWebServicesCredentialsBinding&apos;,
+                    accessKeyVariable: &apos;AWS_ACCESS_KEY&apos;,
                     credentialsId: JENKINS_AWS_ID,
-                    secretKeyVariable: 'AWS_SECRET_KEY'
+                    secretKeyVariable: &apos;AWS_SECRET_KEY&apos;
                 ]
             ]) {
                 sh deploymentCmd
-                sleep time: 15, unit: 'SECONDS' // Wait for 5 seconds
+                sleep time: 15, unit: &apos;SECONDS&apos; // Wait for 5 seconds
             }
-            
+
         }
     }
 
-    stage("Route traffic") {
+    stage(&quot;Route traffic&quot;) {
         script {
             withCredentials([
                 sshUserPrivateKey(
                     credentialsId: APP_PRD_SSH_CREDENTIALS_ID,
-                    keyFileVariable: 'SSH_KEY',
-                    passphraseVariable: 'SSH_PASSPHRASE',
-                    usernameVariable: 'SSH_USERNAME'
+                    keyFileVariable: &apos;SSH_KEY&apos;,
+                    passphraseVariable: &apos;SSH_PASSPHRASE&apos;,
+                    usernameVariable: &apos;SSH_USERNAME&apos;
                 ),
                 [
-                    $class: 'AmazonWebServicesCredentialsBinding',
-                    accessKeyVariable: 'AWS_ACCESS_KEY',
+                    $class: &apos;AmazonWebServicesCredentialsBinding&apos;,
+                    accessKeyVariable: &apos;AWS_ACCESS_KEY&apos;,
                     credentialsId: JENKINS_AWS_ID,
-                    secretKeyVariable: 'AWS_SECRET_KEY'
+                    secretKeyVariable: &apos;AWS_SECRET_KEY&apos;
                 ]
             ]) {
                 sh validateCmd
@@ -246,41 +246,41 @@ def deployToEnvironment( String blueARN, String greenARN, String blueIP, String 
 
 
 def getDeploymentCommand(greenIP) {
-    return """
-        ssh-keyscan -H ${greenIP} >> ~/.ssh/known_hosts
+    return &quot;&quot;&quot;
+        ssh-keyscan -H ${greenIP} &gt;&gt; ~/.ssh/known_hosts
         scp -i \${SSH_KEY} -r ${workspace}/openmeetings-server/target/ ec2-user@${greenIP}:/home/ec2-user/openmeetings
-        ssh -i \${SSH_KEY} ec2-user@${greenIP} 'sudo tar -xzf /home/ec2-user/openmeetings/target/*SNAPSHOT.tar.gz --strip-components=1 -C /home/ec2-user/openmeetings-app && sudo /home/ec2-user/openmeetings-app/bin/startup.sh'
-    """
+        ssh -i \${SSH_KEY} ec2-user@${greenIP} &apos;sudo tar -xzf /home/ec2-user/openmeetings/target/*SNAPSHOT.tar.gz --strip-components=1 -C /home/ec2-user/openmeetings-app &amp;&amp; sudo /home/ec2-user/openmeetings-app/bin/startup.sh&apos;
+    &quot;&quot;&quot;
 }
 
 def getValidationCommand(String blueARN, String greenARN, String greenIP)  {
 
-    return """
-        if [ "\$( curl -o /dev/null -s -I -w '%{http_code}' http://${greenIP}:5080/)" -eq 200 ]
+    return &quot;&quot;&quot;
+        if [ &quot;\$( curl -o /dev/null -s -I -w &apos;%{http_code}&apos; http://${greenIP}:5080/)&quot; -eq 200 ]
         then
-            echo "** BUILD IS SUCCESSFUL **"
+            echo &quot;** BUILD IS SUCCESSFUL **&quot;
             curl -I http://${greenIP}:5080/
             aws configure set aws_access_key_id \$AWS_ACCESS_KEY
             aws configure set aws_secret_access_key \$AWS_SECRET_KEY
             aws configure set region us-west-2
-            aws elbv2 modify-listener --listener-arn \${APP_LISTENER_ARN} --default-actions '[{\"Type\": \"forward\",\"Order\": 1,\"ForwardConfig\": {\"TargetGroups\": [{\"TargetGroupArn\": \"${blueARN}\", \"Weight\": 0 },{\"TargetGroupArn\": \"${greenARN}\", \"Weight\": 1 }],\"TargetGroupStickinessConfig\": {\"Enabled\": true,\"DurationSeconds\": 1}}}]'
+            aws elbv2 modify-listener --listener-arn \${APP_LISTENER_ARN} --default-actions &apos;[{\&quot;Type\&quot;: \&quot;forward\&quot;,\&quot;Order\&quot;: 1,\&quot;ForwardConfig\&quot;: {\&quot;TargetGroups\&quot;: [{\&quot;TargetGroupArn\&quot;: \&quot;${blueARN}\&quot;, \&quot;Weight\&quot;: 0 },{\&quot;TargetGroupArn\&quot;: \&quot;${greenARN}\&quot;, \&quot;Weight\&quot;: 1 }],\&quot;TargetGroupStickinessConfig\&quot;: {\&quot;Enabled\&quot;: true,\&quot;DurationSeconds\&quot;: 1}}}]&apos;
         else
-            echo "** BUILD IS FAILED ** Health check returned non 200 status code"
+            echo &quot;** BUILD IS FAILED ** Health check returned non 200 status code&quot;
             curl -I http://${greenIP}:5080/
             exit 2
         fi
-    """
+    &quot;&quot;&quot;
 }
 
 def loadPropertiesFromFile() {
-    def propertiesFilePath = "${workspace}/../environment_variables_${env.JOB_NAME}.properties"
-    def properties = sh(script: "cat ${propertiesFilePath}", returnStdout: true).trim()
+    def propertiesFilePath = &quot;${workspace}/../environment_variables_${env.JOB_NAME}.properties&quot;
+    def properties = sh(script: &quot;cat ${propertiesFilePath}&quot;, returnStdout: true).trim()
 
     // Create a map to store the key-value pairs from properties
     def propertiesMap = [:]
 
-    properties.split('\n').each { property ->
-        def (key, value) = property.split('=')
+    properties.split(&apos;\n&apos;).each { property -&gt;
+        def (key, value) = property.split(&apos;=&apos;)
         propertiesMap[key] = value // Store the key-value pair in the map
     }
 
@@ -297,8 +297,7 @@ def setEnvironmentVariables() {
     propertiesMap.APP_GREEN_IP = propertiesMap.APP_BLUE_IP
     propertiesMap.APP_BLUE_IP = blueIPtmp
 
-    def propertiesContent = propertiesMap.collect { key, value -> "${key}=${value}" }.join('\n')
+    def propertiesContent = propertiesMap.collect { key, value -&gt; &quot;${key}=${value}&quot; }.join(&apos;\n&apos;)
 
     return propertiesContent
 }
-

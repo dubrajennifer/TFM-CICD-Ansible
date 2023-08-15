@@ -1,3 +1,4 @@
+
 def FAILED_STAGE
 
 pipeline {
@@ -11,7 +12,7 @@ pipeline {
         string(name: 'STATIC_RECIPIENTS', defaultValue: 'jennifer.dubra@udc.es, software.dbr@gmail.com', description: 'Comma-separated list of static email recipients')
     }
 
-    environment {       
+    environment {
         STATIC_RECIPIENTS = "${params.STATIC_RECIPIENTS}"
         GIT_REPOSITORY='https://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@github.com/dubrajennifer/TFM-CICD-Apache-openmeetings.git'
     }
@@ -20,7 +21,7 @@ pipeline {
         maven '3.9.4'
     }
     stages {
-       stage('Checkout') {
+        stage('Checkout') {
             when {
                 expression {
                     return !params.DEPLOY_ONLY
@@ -31,7 +32,7 @@ pipeline {
                     def eventPayload = JSON.parse(env.CHANGE_PAYLOAD)
                     def branch = eventPayload.ref
                     def commitMessage = eventPayload.head_commit.message
-                    
+
                     echo "Event payload ${eventPayload}"
 
                     if (branch == 'refs/heads/master') {
@@ -40,7 +41,7 @@ pipeline {
 
                         // Perform actions specific to commits on master
                     }
-                    
+
                     if (branch != 'refs/heads/master') {
                         currentBuild.result = 'ABORTED'
                         error "Build triggered by non-master commit. Build is aborted."
@@ -48,7 +49,7 @@ pipeline {
                     cleanWs()
                 }
                 // Checkout the Git repository
-               git branch: "${params.BRANCH_TO_BUILD}", url: "${GIT_REPOSITORY}"
+                git branch: "${params.BRANCH_TO_BUILD}", url: "${GIT_REPOSITORY}"
             }
             post {
                 always {
@@ -75,7 +76,7 @@ pipeline {
                                 "-Dsonar.projectKey=${env.JOB_NAME}",
                                 "-Dsonar.projectName${env.JOB_NAME}"
                             ]
-                            
+
                             // Run the SonarQube scanner with the defined properties and other Maven goals
                             sh "mvn clean verify sonar:sonar -DskipTests ${sonarProperties.join(' ')}"
                         }
@@ -136,7 +137,7 @@ pipeline {
                 }
             }
         }
-       
+
 
         stage("Nexus") {
             when {
@@ -233,8 +234,8 @@ pipeline {
                 if (currentBuild.result == 'FAILURE' || currentBuild.result == 'UNSTABLE') {
                     def staticRecipients = env.STATIC_RECIPIENTS
                     emailext subject: "[JENKINS][${env.JOB_NAME}] ${currentBuild.result} at ${FAILED_STAGE}",
-                             body: "The build has failed or is unstable in stage: ${FAILED_STAGE} \nCheck console output at ${env.BUILD_URL} to view the results.",
-                             to: "${staticRecipients}"
+                            body: "The build has failed or is unstable in stage: ${FAILED_STAGE} \nCheck console output at ${env.BUILD_URL} to view the results.",
+                            to: "${staticRecipients}"
                 }
             }
         }

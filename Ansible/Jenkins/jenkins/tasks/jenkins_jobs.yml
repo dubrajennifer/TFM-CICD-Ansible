@@ -5,17 +5,12 @@
   delegate_to: localhost
   run_once: true
 
-- name: Read pipeline.groovy content
+- name: Read STG-generic_pipeline.groovy content
   slurp:
     src: "/tmp/STG-generic_pipeline.groovy"
   register: groovy_content
 
-- debug:
-    var: groovy_content.content
-- debug:
-    var: groovy_content
-
-- name: Convert Groovy to XML
+- name: Convert STG Groovy to XML
   set_fact:
     job_xml: |
       <flow-definition plugin="workflow-job@2.40">
@@ -33,7 +28,7 @@
       </flow-definition>
 
 
-- name: Write job config XML
+- name: Write STG job config XML
   copy:
     content: "{{ job_xml }}"
     dest: /tmp/STG-pipeline_job.xml
@@ -44,12 +39,59 @@
     dest: "{{ jenkins_home }}"
     mode: '0755'  # Make the downloaded file executable
 
-- name: Create Jenkins job using CLI
+- name: Create Jenkins STG job using CLI
   command: >
     {{ jenkins_cli_command }}
     -s http://localhost:8080/
     -auth {{ jenkins_admin_username }}:{{ jenkins_admin_username }}
-    create-job STG-Pipeline-Job
+    create-job PRD-App
   args:
     stdin: "{{ lookup('file', '/tmp/STG-pipeline_job.xml') }}"
+
+
+
+- name: Copy PRD pipeline job to temporary directory
+  copy:
+    src: "../templates/PRD-generic_pipeline.groovy"
+    dest: "/tmp/PRD-generic_pipeline.groovy"
+  delegate_to: localhost
+  run_once: true
+
+
+- name: Read PRD-generic_pipeline.groovy content
+  slurp:
+    src: "/tmp/PRD-generic_pipeline.groovy"
+  register: groovy_content
+
+- name: Convert PRD Groovy to XML
+  set_fact:
+    job_xml: |
+      <flow-definition plugin="workflow-job@2.40">
+        <actions/>
+        <description>PRD Pipeline Job</description>
+        <keepDependencies>false</keepDependencies>
+        <properties/>
+        <definition class="org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition" plugin="workflow-cps@2.90">
+            <script>
+                {{ groovy_content.content | b64decode | indent(14) }}
+            </script>
+            <sandbox>false</sandbox>
+        </definition>
+        <triggers/>
+      </flow-definition>
+
+
+- name: Write PRD job config XML
+  copy:
+    content: "{{ job_xml }}"
+    dest: /tmp/PRD-pipeline_job.xml
+
+- name: Create Jenkins PRD job using CLI
+  command: >
+    {{ jenkins_cli_command }}
+    -s http://localhost:8080/
+    -auth {{ jenkins_admin_username }}:{{ jenkins_admin_username }}
+    create-job PRD-App
+  args:
+    stdin: "{{ lookup('file', '/tmp/PRD-pipeline_job.xml') }}"
 
