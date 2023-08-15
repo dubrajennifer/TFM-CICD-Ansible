@@ -30,7 +30,8 @@
     user: "{{ jenkins_admin_username }}"
     password: "{{ jenkins_admin_password }}"
     url: "http://localhost:8080"
-    config: "{{ lookup('file', '/tmp/STG-pipeline_job.xml) }}"
+    config: "{{ lookup('file', '/tmp/STG-pipeline_job.xml') }}"
+
 
 
 - name: Create PRD Pipeline job
@@ -39,4 +40,4 @@
     user: "{{ jenkins_admin_username }}"
     password: "{{ jenkins_admin_password }}"
     url: "http://localhost:8080"
-    config: "{{ lookup('file', '/tmp/PRD-pipeline_job.xml) }}"
+    config: "{{ lookup('file', '/tmp/PRD-pipeline_job.xml') }}"
