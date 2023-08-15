@@ -7,8 +7,6 @@
   become: yes
   become_user: root
 
-# tasks/main.yml
----
 - name: Create SonarQube Project
   uri:
     url: "http://localhost:9000/api/projects/create"
