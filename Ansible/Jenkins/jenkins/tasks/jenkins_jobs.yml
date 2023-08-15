@@ -1,3 +1,10 @@
+- name: Install Jenkins Job DSL plugin
+  jenkins_plugin:
+    name: job-dsl
+    state: present
+  tags: plugins
+
+
 - name: Copy STG pipeline template to temporary directory
   copy:
     src: "../templates/STG-generic_pipeline.groovy"
@@ -10,37 +17,50 @@
     src: "../templates/PRD-generic_pipeline.groovy"
     dest: "/tmp/PRD-generic_pipeline.groovy"
 
-- name: Read STG pipeline script from file
-  slurp:
-    src: "/tmp/STG-generic_pipeline.groovy"
-  register: pipeline_stg_script
-
-- name: Read PRD pipeline script from file
-  slurp:
-    src: "/tmp/PRD-generic_pipeline.groovy"
-  register: pipeline_prd_script
-
-- name: Create STG Jenkins job
-  jenkins_script:
+- name: Create STG Pipeline job
+  jenkins_job:
+    name: STG-App
     user: "{{ jenkins_admin_username }}"
     password: "{{ jenkins_admin_password }}"
     url: "http://localhost:8080"
-    script: |
-      def pipelineScript = new String('{{ pipeline_stg_script.content | b64decode | replace("\n", "\\n") }}', 'UTF-8')
-      hudson.model.Job job = Jenkins.instance.createProject(hudson.model.FreeStyleProject, 'PRD-App')
-      job.updateNextBuildNumber(1)
-      job.definition = new org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition(pipelineScript, true)
-    sandbox: false  
+    config: |
+      pipelineJob('STG-App') {
+          definition {
+              cpsScm {
+                  scm {
+                      git {
+                          remote {
+                              url('https://github.com/your/repo.git')
+                          }
+                          branches('*/master') // Or the branch you want to build from
+                      }
+                  }
+              }
+              scriptPath('/tmp/STG-generic_pipeline.groovy') // Path to your Jenkinsfile in the repository
+          }
+      }
+  tags: create_jenkins_job
 
-
-- name: Create PRD Jenkins job
-  jenkins_script:
+- name: Create PRD Pipeline job
+  jenkins_job:
+    name: PRD-App
     user: "{{ jenkins_admin_username }}"
     password: "{{ jenkins_admin_password }}"
     url: "http://localhost:8080"
-    script: |
-      def pipelineScript = new String('{{ pipeline_prd_script.content | b64decode | replace("\n", "\\n") }}', 'UTF-8')
-      hudson.model.Job job = Jenkins.instance.createProject(hudson.model.FreeStyleProject, 'PRD-App')
-      job.updateNextBuildNumber(1)
-      job.definition = new org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition(pipelineScript, true)
-    sandbox: false  
+    config: |
+      pipelineJob('PRD-App') {
+          definition {
+              cpsScm {
+                  scm {
+                      git {
+                          remote {
+                              url('https://github.com/your/repo.git')
+                          }
+                          branches('*/master') // Or the branch you want to build from
+                      }
+                  }
+              }
+              scriptPath('/tmp/PRD-generic_pipeline.groovy') // Path to your Jenkinsfile in the repository
+          }
+      }
+  tags: create_jenkins_job
