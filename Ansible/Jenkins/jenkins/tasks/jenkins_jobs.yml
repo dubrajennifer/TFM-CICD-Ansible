@@ -44,7 +44,7 @@
     {{ jenkins_cli_command }}
     -s http://localhost:8080/
     -auth {{ jenkins_admin_username }}:{{ jenkins_admin_username }}
-    create-job PRD-App
+    create-job STG-App
   args:
     stdin: "{{ lookup('file', '/tmp/STG-pipeline_job.xml') }}"
 
