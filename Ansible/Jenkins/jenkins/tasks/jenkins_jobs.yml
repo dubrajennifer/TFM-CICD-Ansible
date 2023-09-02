@@ -1,3 +1,9 @@
+
+- name: Check if Jenkins API is available
+  wait_for:
+    port: 8080
+    delay: 5
+
 - name: Copy STG pipeline job to temporary directory
   copy:
     src: "../templates/STG-generic_pipeline.groovy"
@@ -45,7 +51,9 @@
     {{ jenkins_cli_command }}
     -s http://localhost:8080/
     -auth {{ jenkins_admin_username }}:{{ jenkins_admin_username }}
-    create-job STG-App < /tmp/STG-pipeline_job.xml"
+    create-job STG-App
+  args:
+    stdin: "{{ lookup('file', '/tmp/STG-pipeline_job.xml') }}"
 
 
 
