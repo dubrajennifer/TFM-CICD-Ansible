@@ -12,19 +12,3 @@
     port: 9000
     delay: 10
 
-- name: Create SonarQube Project
-  uri:
-    url: "http://localhost:9000/api/projects/create"
-    method: POST
-    url_username: admin
-    url_password: admin
-    body_format: json
-    body: |
-      {
-        "name": "{{ sonar_project_name }}",
-        "project": "{{ sonar_project_key }}",
-        "language": "{{ sonar_project_language }}"
-      }
-    status_code: 200
-  delegate_to: localhost
-

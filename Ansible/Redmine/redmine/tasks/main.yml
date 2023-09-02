@@ -1,4 +1,4 @@
 ---
 - include: java_install.yml
 - include: docker_install.yml
-- include: sonar_install.yml
+- include: redmine_install.yml

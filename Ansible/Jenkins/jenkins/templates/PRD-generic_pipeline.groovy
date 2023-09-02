@@ -6,7 +6,7 @@ pipeline {
     parameters {
         booleanParam(name: &apos;DEPLOY_ONLY&apos;, defaultValue: false, description: &apos;Only deploy&apos;)
         booleanParam(name: &apos;INIT_ENVIRONMENT_VARIABLES&apos;, defaultValue: false, description: &apos;Initialize environment variables&apos;)
-        string(name: &apos;RELEASE_TO_BUILD&apos;, defaultValue: &apos;master&apos;, description: &apos;Specify the Git release to build&apos;)
+        string(name: &apos&apos;, defaultValue: &apos;master&apos;, description: &apos;Specify the Git release to build&apos;)
         string(name: &apos;STATIC_RECIPIENTS&apos;, defaultValue: &apos;jennifer.dubra@udc.es, software.dbr@gmail.com&apos;, description: &apos;Comma-separated list of static email recipients&apos;)
     }
 

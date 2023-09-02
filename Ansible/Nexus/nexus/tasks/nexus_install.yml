@@ -102,28 +102,3 @@
   wait_for:
     port: 8081
     delay: 10
-
-- name: Read admin password from file
-  shell: cat /nexus/nexus-data/admin.password
-  register: admin_password
-
-- name: Set admin password variable
-  set_fact:
-    initial_admin_password: "{{ admin_password.stdout | trim }}"
-
-- name: Debug Initial Admin Password
-  debug:
-    var: initial_admin_password
-
-- name: Set Initial Password for Nexus
-  uri:
-    url: "http://localhost:8081/v1/security/users/admin/change-password"
-    method: PUT
-    url_username: admin
-    url_password: "{{ initial_admin_password }}"
-    body_format: json
-    body: |
-      {
-        "password": "nexus"
-      }
-
