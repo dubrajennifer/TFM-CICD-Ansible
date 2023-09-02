@@ -26,3 +26,4 @@ jenkins_plugins_list:
   - envinject
   - configuration-as-code-groovy
   - job-dsl
+  - workflow-job
