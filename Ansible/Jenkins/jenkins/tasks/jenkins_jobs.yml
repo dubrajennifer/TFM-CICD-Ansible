@@ -22,8 +22,8 @@
             <script>
                 {{ groovy_content.content | b64decode | indent(14) }}
             </script>
-          <sandbox>true</sandbox>
-        </definition>
+            <sandbox>true</sandbox>
+          </definition>
         <triggers/>
         <disabled>false</disabled>
       </flow-definition>
@@ -67,19 +67,22 @@
 - name: Convert PRD Groovy to XML
   set_fact:
     job_xml: |
-      <flow-definition plugin="workflow-job@2.40">
-        <actions/>
-        <description>PRD Pipeline Job</description>
-        <keepDependencies>false</keepDependencies>
-        <properties/>
-        <definition class="org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition" plugin="workflow-cps@2.90">
+        <?xml version='1.1' encoding='UTF-8'?>
+        <flow-definition plugin="workflow-job@1342.v046651d5b_dfe">
+          <description></description>
+          <keepDependencies>false</keepDependencies>
+          <properties/>
+          <definition class="org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition" plugin="workflow-cps@3774.v4a_d648d409ce">
+            <script>
             <script>
                 {{ groovy_content.content | b64decode | indent(14) }}
             </script>
-            <sandbox>false</sandbox>
-        </definition>
+            <sandbox>true</sandbox>
+          </definition>
         <triggers/>
+        <disabled>false</disabled>
       </flow-definition>
+
 
 
 - name: Write PRD job config XML
