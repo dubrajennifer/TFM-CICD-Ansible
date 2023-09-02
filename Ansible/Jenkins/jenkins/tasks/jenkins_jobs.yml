@@ -1,3 +1,7 @@
+- name: Restart Jenkins for the plugins to take effect
+  systemd:
+    name: jenkins
+    state: restarted
 
 - name: Check if Jenkins API is available
   wait_for:
