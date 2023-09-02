@@ -11,3 +11,5 @@ envVariables:
     value: "stg-maven-repository"
   - key: PRD_NEXUS_REPOSITORY
     value: "prd-maven-repository"
+  - key: JENKINS_AWS_ID
+    value: "aws-credentials-id"
