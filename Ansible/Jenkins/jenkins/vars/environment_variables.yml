@@ -13,3 +13,4 @@ envVariables:
     value: "prd-maven-repository"
   - key: JENKINS_AWS_ID
     value: "aws-credentials-id"
+  
